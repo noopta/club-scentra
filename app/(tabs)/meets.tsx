@@ -3,11 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
-import { popularEvents, nearbyEvents } from '@/constants/MockData';
+import { hostedEvents, goingEvents, pastEvents } from '@/constants/MockData';
 import EventCard from '@/components/EventCard';
 import SearchBar from '@/components/SearchBar';
 
-export default function ExploreScreen() {
+export default function MeetsScreen() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
 
@@ -24,25 +24,26 @@ export default function ExploreScreen() {
           </View>
         </View>
 
-        <Text style={styles.pageTitle}>Find Car Events</Text>
+        <Text style={styles.pageTitle}>My Meets</Text>
 
         <View style={styles.filterRow}>
           <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="location-sharp" size={14} color={Theme.colors.primary} />
-            <Text style={styles.filterText}>Location</Text>
+            <Text style={styles.filterText}>Sort by Location</Text>
             <Ionicons name="chevron-down" size={14} color={Theme.colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="calendar" size={14} color={Theme.colors.primary} />
-            <Text style={styles.filterText}>Date</Text>
+            <Text style={styles.filterText}>Sort by Date</Text>
             <Ionicons name="chevron-down" size={14} color={Theme.colors.textPrimary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filterIcon}>
+            <Ionicons name="options-outline" size={20} color={Theme.colors.textPrimary} />
           </TouchableOpacity>
         </View>
 
         <SearchBar value={searchText} onChangeText={setSearchText} />
 
-        <Text style={styles.sectionTitle}>Popular Events</Text>
-        {popularEvents.map((event) => (
+        <Text style={styles.sectionTitle}>Hosted by Saraaa13</Text>
+        {hostedEvents.map((event) => (
           <EventCard
             key={event.id}
             name={event.name}
@@ -54,14 +55,27 @@ export default function ExploreScreen() {
           />
         ))}
 
-        <Text style={styles.sectionTitle}>Events Near You</Text>
-        {nearbyEvents.map((event) => (
+        <Text style={styles.sectionTitle}>Going</Text>
+        {goingEvents.map((event) => (
           <EventCard
             key={event.id}
             name={event.name}
             location={event.location}
             date={event.date}
             image={event.image}
+            onPress={() => router.push('/event-detail')}
+          />
+        ))}
+
+        <Text style={styles.sectionTitle}>Past Ride Log</Text>
+        {pastEvents.map((event) => (
+          <EventCard
+            key={event.id}
+            name={event.name}
+            location={event.location}
+            date={event.date}
+            image={event.image}
+            variant="past"
             onPress={() => router.push('/event-detail')}
           />
         ))}
@@ -97,13 +111,14 @@ const styles = StyleSheet.create({
     marginTop: -4,
   },
   pageTitle: {
-    fontSize: Theme.fontSize.lg,
-    fontWeight: Theme.fontWeight.semibold,
+    fontSize: Theme.fontSize.xl,
+    fontWeight: Theme.fontWeight.bold,
     color: Theme.colors.textPrimary,
     marginBottom: Theme.spacing.sm,
   },
   filterRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: Theme.spacing.sm,
     marginBottom: Theme.spacing.md,
   },
@@ -118,8 +133,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Theme.colors.border,
   },
+  filterIcon: {
+    padding: Theme.spacing.sm,
+  },
   filterText: {
-    fontSize: Theme.fontSize.sm,
+    fontSize: Theme.fontSize.xs,
     color: Theme.colors.textPrimary,
     fontWeight: Theme.fontWeight.medium,
   },
