@@ -1,0 +1,205 @@
+**Navigation for all CLUB SCENTRA Figma buttons:**
+
+**PAGES:**
+
+1. Log in/Sign up
+2. Log in
+3. Create Account
+    1. Create Account 2
+4. Terms and Conditions
+5. Explore Page
+    1. Single Event Page
+    2. Maybe Search Event Page(I want it built into the same page so maybe no)
+6. Meets Page
+    1. Single Event Page
+7. Create Event Page
+    1. Create Event Page 2
+    2. Create Event Page 3
+    3. Create Event Page 4
+    4. Create Event Page 5
+8. Friends Page
+    1. Message Page
+9. Profile Page
+    1. Edit Profile Page
+    2. Share Profile Page
+    3. Settings Page
+        1. SO MANY PAGES IDK
+10. ERROR 404 PAGE
+
+Landing Page:
+
+Button-Log in —> Log in Page
+
+Button-Sign up —> Create Account Page
+
+Log in Page:
+
+Button-Continue with Google —> Log in with Google, idk if this is a seperate page
+
+Username/Email —> Input Username/Email
+
+Password —> Input password
+
+Button-Log in —> Explore Scrollable Page
+
+Button-No Account? Sign up —> Create Account Page
+
+Create Account Page:
+
+Button-Continue with Google —> Log in with Google, idk if this is a seperate page
+
+Email —> Input Email
+
+Button-Continue with Email —> Create Account 2 Page
+
+Button-Have an account? Log in —> Login Page
+
+Create Account 2 Page:
+
+Username —> Input Username
+
+Email —> Input Email
+
+Password —> Input password
+
+Confirm Password —> Re-Input password
+
+Agree to terms and conditions —> Click
+
+Terms and Conditions —> idk a different page with our terms and conditions?
+
+Button-Create account —> Explore Scrollable Page
+
+Button-Have an account? Log in —> Login Page
+
+Explore Page:
+
+Location drop down: Search by Location
+
+Date drop down: Search by Date
+
+Search Box —> Input Name, Event, Location —> Search button
+
+Actual Car events —> Not wired out yet
+
+Meets Icon —> Meets Page
+
+Create Event Icon —> Create an Event Page
+
+Friends Icon —> Friends Profile Page
+
+Profile —> My Driver Profile Page
+
+My Meets Page:
+
+Search Box —> Input Name, Event, Location —> Search button
+
+Actual Car events —> Not wired out yet
+
+Events Icon —> Events Page
+
+Create Event Icon —> Create an Event Page
+
+Friends Icon —> Friends Profile Page
+
+Profile —> My Driver Profile Page
+
+Create an Event Page:
+
+Event Name —> Input Event Name
+
+Button-Next: Location —> Create an Event 2 Page
+
+Events Icon —> Events Page
+
+Meets Icon —> Meets Page
+
+Friends Icon —> Friends Profile Page
+
+Profile —> My Driver Profile Page
+
+Create an Event 2 Page:
+
+Search Address —> Input Address —> Search Button
+
+Address —> Input Address
+
+City —> Input City
+
+Province/State —> Input Province/State
+
+Postal Code/Zip Code —> Postal Code/Zip Code
+
+Additional Info —> Input Additional Info
+
+Button-Next: Date and Time —> Create an Event 3 Page
+
+Events Icon —> Events Page
+
+Meets Icon —> Meets Page
+
+Friends Icon —> Friends Profile Page
+
+Profile —> My Driver Profile Page
+
+Create an Event 3 Page:
+
+Date —> Choose Date drop down calender
+
+Start Time —> Input Start time 
+
+End Time —> Input End Time
+
+Button-Next: Add a Picture —> Create an Event 4 Page
+
+Events Icon —> Events Page
+
+Meets Icon —> Meets Page
+
+Friends Icon —> Friends Profile Page
+
+Profile —> My Driver Profile Page
+
+Create an Event 4 Page:
+
+Event Name —> Input Event Name
+
+Button-Create Event —> Create an Event 
+
+Events Icon —> Events Page
+
+Meets Icon —> Meets Page
+
+Friends Icon —> Friends Profile Page
+
+Profile —> My Driver Profile Page
+
+Friends Profile Page:
+
+Button-Follow —> Follow them
+
+Button Message —> Message Page
+
+Events Icon —> Events Page
+
+Meets Icon —> Meets Page
+
+Create Event Icon —> Create an Event Page
+
+Profile —> My Driver Profile Page
+
+My Profile Page:
+
+Button-Edit Profile —> Edit Profile Page
+
+Button-Share Profile —> Share Profile —> idk if I want it as a page yet or not
+
+Events Icon —> Events Page
+
+Meets Icon —> Meets Page
+
+Create Event Icon —> Create an Event Page
+
+Friends Profile —> Friends Profile Page
+
+*** Need to add a settings button to show all settings like Instagram
