@@ -69,10 +69,9 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.cardBackground,
     borderRadius: 16,
     flexDirection: 'row',
-    padding: 16,
-    marginBottom: 12,
+    padding: 12,
+    marginBottom: 10,
     overflow: 'hidden',
-    minHeight: 140,
   },
   popularCard: {
     backgroundColor: Theme.colors.primary,
@@ -82,38 +81,37 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
-    paddingRight: 12,
-    justifyContent: 'space-between',
+    paddingRight: 10,
+    justifyContent: 'center',
   },
   name: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
     fontStyle: 'italic',
     color: Theme.colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   popularName: {
     color: Theme.colors.white,
   },
   infoGroup: {
-    marginTop: 'auto',
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 3,
   },
   infoText: {
-    fontSize: 13,
+    fontSize: 12,
     color: Theme.colors.textSecondary,
-    marginLeft: 6,
+    marginLeft: 5,
   },
   popularText: {
     color: Theme.colors.white,
   },
   image: {
-    width: 140,
-    height: 110,
-    borderRadius: 12,
+    width: 130,
+    height: 95,
+    borderRadius: 10,
   },
 });
