@@ -68,13 +68,12 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.md,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Theme.spacing.sm,
+    padding: Theme.spacing.md,
     marginBottom: Theme.spacing.sm,
     overflow: 'hidden',
   },
   popularCard: {
     backgroundColor: Theme.colors.primary,
-    paddingVertical: Theme.spacing.md,
   },
   pastCard: {
     opacity: 0.7,
@@ -85,14 +84,13 @@ const styles = StyleSheet.create({
     paddingLeft: Theme.spacing.sm,
   },
   name: {
-    fontSize: Theme.fontSize.lg,
+    fontSize: Theme.fontSize.xl,
     fontWeight: Theme.fontWeight.bold,
     color: Theme.colors.textPrimary,
     marginBottom: 4,
   },
   popularName: {
     color: Theme.colors.white,
-    fontSize: Theme.fontSize.xl,
   },
   infoRow: {
     flexDirection: 'row',
@@ -108,13 +106,11 @@ const styles = StyleSheet.create({
     color: Theme.colors.white,
   },
   image: {
-    width: 90,
-    height: 70,
+    width: 110,
+    height: 85,
     borderRadius: Theme.borderRadius.sm,
   },
   popularImage: {
-    width: 110,
-    height: 85,
     borderRadius: Theme.borderRadius.sm,
   },
 });
