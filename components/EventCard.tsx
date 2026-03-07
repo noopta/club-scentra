@@ -36,28 +36,30 @@ export default function EventCard({ name, location, date, image, onPress, varian
         >
           {name}
         </Text>
-        <View style={styles.infoRow}>
-          <Ionicons
-            name="location-sharp"
-            size={14}
-            color={isPopular ? Theme.colors.white : Theme.colors.primary}
-          />
-          <Text style={[styles.infoText, isPopular && styles.popularText]}>
-            {location}
-          </Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Ionicons
-            name="calendar"
-            size={14}
-            color={isPopular ? Theme.colors.white : Theme.colors.primary}
-          />
-          <Text style={[styles.infoText, isPopular && styles.popularText]}>
-            {date}
-          </Text>
+        <View style={styles.infoGroup}>
+          <View style={styles.infoRow}>
+            <Ionicons
+              name="location-sharp"
+              size={14}
+              color={isPopular ? Theme.colors.white : Theme.colors.primary}
+            />
+            <Text style={[styles.infoText, isPopular && styles.popularText]}>
+              {location}
+            </Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Ionicons
+              name="calendar"
+              size={14}
+              color={isPopular ? Theme.colors.white : Theme.colors.primary}
+            />
+            <Text style={[styles.infoText, isPopular && styles.popularText]}>
+              {date}
+            </Text>
+          </View>
         </View>
       </View>
-      <Image source={{ uri: image }} style={[styles.image, isPopular && styles.popularImage]} />
+      <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
     </TouchableOpacity>
   );
 }
@@ -65,12 +67,12 @@ export default function EventCard({ name, location, date, image, onPress, varian
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Theme.colors.cardBackground,
-    borderRadius: Theme.borderRadius.md,
+    borderRadius: 16,
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: Theme.spacing.md,
-    marginBottom: Theme.spacing.sm,
+    padding: 16,
+    marginBottom: 12,
     overflow: 'hidden',
+    minHeight: 140,
   },
   popularCard: {
     backgroundColor: Theme.colors.primary,
@@ -80,37 +82,38 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
-    paddingRight: Theme.spacing.sm,
-    paddingLeft: Theme.spacing.sm,
+    paddingRight: 12,
+    justifyContent: 'space-between',
   },
   name: {
-    fontSize: Theme.fontSize.xl,
-    fontWeight: Theme.fontWeight.bold,
+    fontSize: 22,
+    fontWeight: '800',
+    fontStyle: 'italic',
     color: Theme.colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   popularName: {
     color: Theme.colors.white,
   },
+  infoGroup: {
+    marginTop: 'auto',
+  },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 4,
   },
   infoText: {
-    fontSize: Theme.fontSize.xs,
+    fontSize: 13,
     color: Theme.colors.textSecondary,
-    marginLeft: 4,
+    marginLeft: 6,
   },
   popularText: {
     color: Theme.colors.white,
   },
   image: {
-    width: 110,
-    height: 85,
-    borderRadius: Theme.borderRadius.sm,
-  },
-  popularImage: {
-    borderRadius: Theme.borderRadius.sm,
+    width: 140,
+    height: 110,
+    borderRadius: 12,
   },
 });
