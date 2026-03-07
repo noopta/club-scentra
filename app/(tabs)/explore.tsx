@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import { popularEvents, nearbyEvents } from '@/constants/MockData';
 import EventCard from '@/components/EventCard';
 import SearchBar from '@/components/SearchBar';
+
+const logo = require('@/assets/images/logo.png');
 
 export default function ExploreScreen() {
   const router = useRouter();
@@ -18,10 +20,7 @@ export default function ExploreScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.clubText}>CLUB</Text>
-            <Text style={styles.scentraText}>SCENTRA</Text>
-          </View>
+          <Image source={logo} style={styles.headerLogo} resizeMode="contain" />
         </View>
 
         <Text style={styles.pageTitle}>Find Car Events</Text>
@@ -83,18 +82,10 @@ const styles = StyleSheet.create({
   headerRow: {
     marginBottom: Theme.spacing.md,
   },
-  clubText: {
-    fontSize: 12,
-    fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
-    letterSpacing: 2,
-  },
-  scentraText: {
-    fontSize: 24,
-    fontWeight: Theme.fontWeight.extrabold,
-    color: Theme.colors.textPrimary,
-    fontStyle: 'italic',
-    marginTop: -4,
+  headerLogo: {
+    width: 100,
+    height: 50,
+
   },
   pageTitle: {
     fontSize: Theme.fontSize.lg,

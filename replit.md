@@ -7,7 +7,7 @@ A car meet focused social app built with React Native (Expo SDK 54) and TypeScri
 - **Framework**: Expo SDK 54 (React Native)
 - **Language**: TypeScript
 - **Routing**: Expo Router v6 (file-based routing)
-- **Icons**: @expo/vector-icons (Ionicons)
+- **Icons**: @expo/vector-icons (Ionicons) + custom PNG tab icons
 - **Animations**: react-native-reanimated
 
 ## Project Structure
@@ -76,8 +76,11 @@ constants/
 - Preview on phone: Scan QR code with Expo Go
 - Web preview: Press 'w' in terminal for web version
 
+## Brand Assets
+- **Logo**: `assets/images/logo.png` — Red S flame logo with "CLUB SCENTRA" text (used on landing, login, signup, explore/meets headers)
+- **Tab Icons**: `assets/images/icons/` — 5 custom PNGs (explore, meets, event, friends, profile) with tintColor for active/inactive states
+
 ## Notes
-- Currently using placeholder icons (Ionicons flame icon for logo)
 - Profile images use Unsplash placeholder URLs
 - Mock data in MockData.ts for all events, friends, messages
 - No backend connected yet — all data is static

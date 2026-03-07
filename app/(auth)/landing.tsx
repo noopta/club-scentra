@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
-import { Ionicons } from '@expo/vector-icons';
+
+const logo = require('@/assets/images/logo.png');
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -10,13 +11,7 @@ export default function LandingScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
-        <View style={styles.logoIcon}>
-          <Ionicons name="flame" size={120} color={Theme.colors.primary} />
-        </View>
-        <View style={styles.brandRow}>
-          <Text style={styles.clubText}>CLUB</Text>
-          <Text style={styles.scentraText}>SCENTRA</Text>
-        </View>
+        <Image source={logo} style={styles.logoImage} resizeMode="contain" />
       </View>
 
       <View style={styles.buttonContainer}>
@@ -54,25 +49,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  logoIcon: {
-    marginBottom: Theme.spacing.lg,
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  clubText: {
-    fontSize: 16,
-    fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
-    letterSpacing: 2,
-    marginRight: 4,
-  },
-  scentraText: {
-    fontSize: 32,
-    fontWeight: Theme.fontWeight.extrabold,
-    color: Theme.colors.textPrimary,
-    fontStyle: 'italic',
+  logoImage: {
+    width: 280,
+    height: 280,
   },
   buttonContainer: {
     gap: Theme.spacing.md,

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
 import { Ionicons } from '@expo/vector-icons';
 import InputField from '@/components/InputField';
+
+const logo = require('@/assets/images/logo.png');
 
 export default function SignupDetailsScreen() {
   const router = useRouter();
@@ -25,7 +27,7 @@ export default function SignupDetailsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.logoContainer}>
-          <Ionicons name="flame" size={60} color={Theme.colors.primary} />
+          <Image source={logo} style={styles.logoImage} resizeMode="contain" />
         </View>
 
         <Text style={styles.title}>Welcome to Club Scentra</Text>
@@ -128,6 +130,11 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginBottom: Theme.spacing.md,
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
+    
   },
   title: {
     fontSize: Theme.fontSize.xxl,

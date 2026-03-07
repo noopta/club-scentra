@@ -1,7 +1,12 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
-import { Platform } from 'react-native';
+import { Platform, Image, StyleSheet } from 'react-native';
+
+const exploreIcon = require('@/assets/images/icons/explore.png');
+const meetsIcon = require('@/assets/images/icons/meets.png');
+const eventIcon = require('@/assets/images/icons/event.png');
+const friendsIcon = require('@/assets/images/icons/friends.png');
+const profileIcon = require('@/assets/images/icons/profile.png');
 
 export default function TabLayout() {
   return (
@@ -14,8 +19,8 @@ export default function TabLayout() {
           backgroundColor: Theme.colors.white,
           borderTopWidth: 1,
           borderTopColor: Theme.colors.divider,
-          height: Platform.OS === 'ios' ? 88 : 65,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          height: Platform.OS === 'ios' ? 88 : 70,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
@@ -29,8 +34,13 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: 'EXPLORE',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="flag" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={exploreIcon}
+              resizeMode="contain"
+              tintColor={focused ? Theme.colors.tabActive : Theme.colors.tabInactive}
+              style={styles.tabIcon}
+            />
           ),
         }}
       />
@@ -38,8 +48,13 @@ export default function TabLayout() {
         name="meets"
         options={{
           title: 'MEETS',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={meetsIcon}
+              resizeMode="contain"
+              tintColor={focused ? Theme.colors.tabActive : Theme.colors.tabInactive}
+              style={styles.tabIcon}
+            />
           ),
         }}
       />
@@ -47,8 +62,13 @@ export default function TabLayout() {
         name="event"
         options={{
           title: 'EVENT',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={eventIcon}
+              resizeMode="contain"
+              tintColor={focused ? Theme.colors.tabActive : Theme.colors.tabInactive}
+              style={styles.tabIcon}
+            />
           ),
         }}
       />
@@ -56,8 +76,13 @@ export default function TabLayout() {
         name="friends"
         options={{
           title: 'FRIENDS',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={friendsIcon}
+              resizeMode="contain"
+              tintColor={focused ? Theme.colors.tabActive : Theme.colors.tabInactive}
+              style={styles.tabIcon}
+            />
           ),
         }}
       />
@@ -65,11 +90,23 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'PROFILE',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={profileIcon}
+              resizeMode="contain"
+              tintColor={focused ? Theme.colors.tabActive : Theme.colors.tabInactive}
+              style={styles.tabIcon}
+            />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabIcon: {
+    width: 26,
+    height: 26,
+  },
+});
