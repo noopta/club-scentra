@@ -8,17 +8,18 @@ const eventIcon = require('@/assets/images/icons/event.png');
 const friendsIcon = require('@/assets/images/icons/friends.png');
 const profileIcon = require('@/assets/images/icons/profile.png');
 
+const TAB_BAR_BG = '#1A1A2E';
+
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Theme.colors.tabActive,
-        tabBarInactiveTintColor: Theme.colors.tabInactive,
+        tabBarInactiveTintColor: '#AAAAAA',
         tabBarStyle: {
-          backgroundColor: Theme.colors.white,
-          borderTopWidth: 1,
-          borderTopColor: Theme.colors.divider,
+          backgroundColor: TAB_BAR_BG,
+          borderTopWidth: 0,
           height: Platform.OS === 'ios' ? 88 : 70,
           paddingBottom: Platform.OS === 'ios' ? 28 : 10,
           paddingTop: 8,
@@ -38,7 +39,8 @@ export default function TabLayout() {
             <Image
               source={exploreIcon}
               resizeMode="contain"
-              style={[styles.tabIcon, { opacity: focused ? 1 : 0.5 }]}
+              tintColor={focused ? Theme.colors.tabActive : '#FFFFFF'}
+              style={styles.tabIcon}
             />
           ),
         }}
@@ -51,7 +53,8 @@ export default function TabLayout() {
             <Image
               source={meetsIcon}
               resizeMode="contain"
-              style={[styles.tabIcon, { opacity: focused ? 1 : 0.5 }]}
+              tintColor={focused ? Theme.colors.tabActive : '#FFFFFF'}
+              style={styles.tabIcon}
             />
           ),
         }}
@@ -64,7 +67,8 @@ export default function TabLayout() {
             <Image
               source={eventIcon}
               resizeMode="contain"
-              style={[styles.tabIcon, { opacity: focused ? 1 : 0.5 }]}
+              tintColor={focused ? Theme.colors.tabActive : '#FFFFFF'}
+              style={styles.tabIcon}
             />
           ),
         }}
@@ -77,7 +81,8 @@ export default function TabLayout() {
             <Image
               source={friendsIcon}
               resizeMode="contain"
-              style={[styles.tabIcon, { opacity: focused ? 1 : 0.5 }]}
+              tintColor={focused ? Theme.colors.tabActive : '#FFFFFF'}
+              style={styles.tabIcon}
             />
           ),
         }}
@@ -90,7 +95,8 @@ export default function TabLayout() {
             <Image
               source={profileIcon}
               resizeMode="contain"
-              style={[styles.tabIcon, { opacity: focused ? 1 : 0.5 }]}
+              tintColor={focused ? Theme.colors.tabActive : '#FFFFFF'}
+              style={styles.tabIcon}
             />
           ),
         }}
