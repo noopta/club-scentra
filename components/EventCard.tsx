@@ -82,14 +82,12 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
     paddingRight: 10,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
   name: {
     fontSize: 18,
     fontWeight: '800',
-    fontStyle: 'italic',
     color: Theme.colors.textPrimary,
-    marginBottom: 6,
   },
   popularName: {
     color: Theme.colors.white,
