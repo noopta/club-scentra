@@ -38,8 +38,7 @@ export default function TabLayout() {
             <Image
               source={exploreIcon}
               resizeMode="contain"
-              tintColor={focused ? Theme.colors.tabActive : Theme.colors.tabInactive}
-              style={styles.tabIcon}
+              style={[styles.tabIcon, { opacity: focused ? 1 : 0.5 }]}
             />
           ),
         }}
@@ -52,8 +51,7 @@ export default function TabLayout() {
             <Image
               source={meetsIcon}
               resizeMode="contain"
-              tintColor={focused ? Theme.colors.tabActive : Theme.colors.tabInactive}
-              style={styles.tabIcon}
+              style={[styles.tabIcon, { opacity: focused ? 1 : 0.5 }]}
             />
           ),
         }}
@@ -66,8 +64,7 @@ export default function TabLayout() {
             <Image
               source={eventIcon}
               resizeMode="contain"
-              tintColor={focused ? Theme.colors.tabActive : Theme.colors.tabInactive}
-              style={styles.tabIcon}
+              style={[styles.tabIcon, { opacity: focused ? 1 : 0.5 }]}
             />
           ),
         }}
@@ -80,8 +77,7 @@ export default function TabLayout() {
             <Image
               source={friendsIcon}
               resizeMode="contain"
-              tintColor={focused ? Theme.colors.tabActive : Theme.colors.tabInactive}
-              style={styles.tabIcon}
+              style={[styles.tabIcon, { opacity: focused ? 1 : 0.5 }]}
             />
           ),
         }}
@@ -94,8 +90,7 @@ export default function TabLayout() {
             <Image
               source={profileIcon}
               resizeMode="contain"
-              tintColor={focused ? Theme.colors.tabActive : Theme.colors.tabInactive}
-              style={styles.tabIcon}
+              style={[styles.tabIcon, { opacity: focused ? 1 : 0.5 }]}
             />
           ),
         }}

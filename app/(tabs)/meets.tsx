@@ -7,7 +7,7 @@ import { hostedEvents, goingEvents, pastEvents } from '@/constants/MockData';
 import EventCard from '@/components/EventCard';
 import SearchBar from '@/components/SearchBar';
 
-const logo = require('@/assets/images/logo.png');
+const headerLogo = require('@/assets/images/club-scentra-text.png');
 
 export default function MeetsScreen() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function MeetsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerRow}>
-          <Image source={logo} style={styles.headerLogo} resizeMode="contain" />
+          <Image source={headerLogo} style={styles.headerLogo} resizeMode="contain" />
         </View>
 
         <Text style={styles.pageTitle}>My Meets</Text>
@@ -97,9 +97,8 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.md,
   },
   headerLogo: {
-    width: 100,
-    height: 50,
-
+    width: 140,
+    height: 35,
   },
   pageTitle: {
     fontSize: Theme.fontSize.xl,

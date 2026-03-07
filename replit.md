@@ -77,8 +77,9 @@ constants/
 - Web preview: Press 'w' in terminal for web version
 
 ## Brand Assets
-- **Logo**: `assets/images/logo.png` — Red S flame logo with "CLUB SCENTRA" text (used on landing, login, signup, explore/meets headers)
-- **Tab Icons**: `assets/images/icons/` — 5 custom PNGs (explore, meets, event, friends, profile) with tintColor for active/inactive states
+- **Logo**: `assets/images/logo.png` — Red S flame logo with "CLUB SCENTRA" text (used on landing, login, signup screens)
+- **Header Logo**: `assets/images/club-scentra-text.png` — "CLUB SCENTRA" text only (used on explore/meets page headers)
+- **Tab Icons**: `assets/images/icons/` — 5 custom PNGs (explore, meets, event, friends, profile) with opacity-based active/inactive states
 
 ## Notes
 - Profile images use Unsplash placeholder URLs
