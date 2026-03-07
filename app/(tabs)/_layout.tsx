@@ -8,7 +8,7 @@ const eventIcon = require('@/assets/images/icons/event.png');
 const friendsIcon = require('@/assets/images/icons/friends.png');
 const profileIcon = require('@/assets/images/icons/profile.png');
 
-const TAB_BAR_BG = '#1A1A2E';
+const TAB_BAR_BG = '#181921';
 
 export default function TabLayout() {
   return (
