@@ -52,17 +52,15 @@ export default function LoginScreen() {
         >
           <Text style={styles.loginButtonText}>Log In</Text>
         </TouchableOpacity>
-      </ScrollView>
 
-      <TouchableOpacity
-        style={styles.bottomBar}
-        onPress={() => router.push('/(auth)/signup')}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.bottomBarText}>
-          No account? <Text style={styles.bottomBarLink}>Sign up</Text>
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.signupButton}
+          onPress={() => router.push('/(auth)/signup')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.signupButtonText}>No account? Sign up</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -82,9 +80,8 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.lg,
   },
   logoImage: {
-    width: 80,
-    height: 80,
-    
+    width: 100,
+    height: 100,
   },
   title: {
     fontSize: Theme.fontSize.xxl,
@@ -126,16 +123,16 @@ const styles = StyleSheet.create({
     fontWeight: Theme.fontWeight.medium,
     color: Theme.colors.textPrimary,
   },
-  bottomBar: {
+  signupButton: {
     backgroundColor: Theme.colors.black,
-    paddingVertical: 18,
+    borderRadius: Theme.borderRadius.xl,
+    paddingVertical: 16,
     alignItems: 'center',
+    marginTop: Theme.spacing.md,
   },
-  bottomBarText: {
+  signupButtonText: {
     fontSize: Theme.fontSize.md,
+    fontWeight: Theme.fontWeight.medium,
     color: Theme.colors.white,
-  },
-  bottomBarLink: {
-    textDecorationLine: 'underline',
   },
 });

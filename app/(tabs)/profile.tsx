@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
@@ -12,17 +12,19 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.topBar}>
         <TouchableOpacity
           style={styles.settingsButton}
           onPress={() => router.push('/settings')}
         >
           <Ionicons name="settings-outline" size={24} color={Theme.colors.textPrimary} />
         </TouchableOpacity>
+      </View>
 
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <ProfileHeader
           username="Saraaa13"
           name="Sara Nova"
@@ -60,16 +62,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Theme.colors.background,
   },
-  scrollContent: {
-    paddingTop: 60,
-    paddingBottom: Theme.spacing.xl,
+  topBar: {
+    paddingTop: Platform.OS === 'ios' ? 54 : 40,
+    paddingHorizontal: Theme.spacing.md,
+    paddingBottom: Theme.spacing.sm,
+    alignItems: 'flex-end',
   },
   settingsButton: {
-    position: 'absolute',
-    top: 0,
-    right: Theme.spacing.md,
-    zIndex: 10,
     padding: Theme.spacing.sm,
+  },
+  scrollContent: {
+    paddingBottom: Theme.spacing.xl,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -91,7 +94,7 @@ const styles = StyleSheet.create({
     color: Theme.colors.textPrimary,
   },
   shareButton: {
-    flex: 1.5,
+    flex: 1,
     backgroundColor: Theme.colors.border,
     borderRadius: Theme.borderRadius.sm,
     paddingVertical: 12,
