@@ -26,7 +26,11 @@ export default function LoginScreen() {
 
         <Text style={styles.title}>Log into Club Scentra</Text>
 
-        <TouchableOpacity style={styles.googleButton} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.googleButton}
+          activeOpacity={0.8}
+          onPress={() => router.push('/(auth)/google-auth')}
+        >
           <Text style={styles.googleButtonText}>Continue with Google</Text>
         </TouchableOpacity>
 

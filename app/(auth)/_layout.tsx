@@ -7,6 +7,7 @@ export default function AuthLayout() {
       <Stack.Screen name="login" />
       <Stack.Screen name="signup" />
       <Stack.Screen name="signup-details" />
+      <Stack.Screen name="google-auth" options={{ animation: 'slide_from_bottom' }} />
     </Stack>
   );
 }

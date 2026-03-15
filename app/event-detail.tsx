@@ -1,19 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import RedButton from '@/components/RedButton';
+import { addGoingEvent } from '@/constants/GoingEvents';
+import { addSavedEvent, removeSavedEvent, isEventSaved } from '@/constants/SavedEvents';
+
+const EVENT = {
+  id: 'detail-1',
+  name: 'Downtown Drive',
+  location: 'Toronto, ON',
+  date: 'Sat Aug 2 at 3 PM',
+  image: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800',
+};
 
 export default function EventDetailScreen() {
   const router = useRouter();
+  const [isGoing, setIsGoing] = useState(false);
+  const [isSaved, setIsSaved] = useState(isEventSaved(EVENT.id));
+
+  const handleGoing = () => {
+    if (!isGoing) {
+      addGoingEvent(EVENT);
+      setIsGoing(true);
+    }
+  };
+
+  const handleInterested = () => {
+    if (isSaved) {
+      removeSavedEvent(EVENT.id);
+      setIsSaved(false);
+    } else {
+      addSavedEvent(EVENT);
+      setIsSaved(true);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800' }}
+            source={{ uri: EVENT.image }}
             style={styles.heroImage}
           />
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -22,7 +51,7 @@ export default function EventDetailScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.eventName}>Downtown Drive</Text>
+          <Text style={styles.eventName}>{EVENT.name}</Text>
 
           <View style={styles.hostRow}>
             <Image
@@ -73,13 +102,24 @@ export default function EventDetailScreen() {
 
           <View style={styles.buttonRow}>
             <RedButton
-              title="I'm Going"
-              onPress={() => {}}
+              title={isGoing ? '✓ Going' : "I'm Going"}
+              onPress={handleGoing}
             />
           </View>
 
-          <TouchableOpacity style={styles.interestedButton} activeOpacity={0.8}>
-            <Text style={styles.interestedText}>Interested</Text>
+          <TouchableOpacity
+            style={[styles.interestedButton, isSaved && styles.interestedButtonActive]}
+            activeOpacity={0.8}
+            onPress={handleInterested}
+          >
+            <Ionicons
+              name={isSaved ? 'bookmark' : 'bookmark-outline'}
+              size={20}
+              color={isSaved ? Theme.colors.primary : Theme.colors.textPrimary}
+            />
+            <Text style={[styles.interestedText, isSaved && styles.interestedTextActive]}>
+              {isSaved ? 'Saved' : 'Interested'}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -190,16 +230,26 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.sm,
   },
   interestedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     borderWidth: 2,
     borderColor: Theme.colors.textPrimary,
     borderRadius: Theme.borderRadius.lg,
     paddingVertical: 16,
-    alignItems: 'center',
     marginBottom: Theme.spacing.xl,
+  },
+  interestedButtonActive: {
+    borderColor: Theme.colors.primary,
+    backgroundColor: '#FFF5F5',
   },
   interestedText: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.bold,
     color: Theme.colors.textPrimary,
+  },
+  interestedTextActive: {
+    color: Theme.colors.primary,
   },
 });
