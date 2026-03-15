@@ -9,6 +9,7 @@ import RedButton from '@/components/RedButton';
 export default function CreateEventScreen() {
   const router = useRouter();
   const [eventName, setEventName] = useState('');
+  const [aboutEvent, setAboutEvent] = useState('');
 
   return (
     <SafeAreaView style={styles.container}>
@@ -23,6 +24,17 @@ export default function CreateEventScreen() {
             label="Event Name"
             value={eventName}
             onChangeText={setEventName}
+          />
+
+          <InputField
+            label="About Event"
+            value={aboutEvent}
+            onChangeText={setAboutEvent}
+            placeholder="Tell people what to expect..."
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            containerStyle={styles.aboutContainer}
           />
 
           <RedButton
@@ -60,5 +72,8 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     gap: Theme.spacing.md,
+  },
+  aboutContainer: {
+    marginBottom: 0,
   },
 });
