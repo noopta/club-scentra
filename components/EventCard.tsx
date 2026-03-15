@@ -16,6 +16,7 @@ export default function EventCard({ name, location, date, image, onPress, varian
   const isPopular = variant === 'popular';
   const isPast = variant === 'past';
   const isDark = variant === 'dark';
+  const useLightText = isPopular || isDark || isPast;
 
   return (
     <TouchableOpacity
@@ -32,8 +33,7 @@ export default function EventCard({ name, location, date, image, onPress, varian
         <Text
           style={[
             styles.name,
-            isPopular && styles.popularName,
-            isDark && styles.darkName,
+            useLightText && styles.lightName,
           ]}
           numberOfLines={2}
         >
@@ -44,9 +44,9 @@ export default function EventCard({ name, location, date, image, onPress, varian
             <Ionicons
               name="location-sharp"
               size={14}
-              color={isPopular || isDark ? Theme.colors.white : Theme.colors.primary}
+              color={useLightText ? Theme.colors.white : Theme.colors.primary}
             />
-            <Text style={[styles.infoText, (isPopular || isDark) && styles.popularText]}>
+            <Text style={[styles.infoText, useLightText && styles.lightText]}>
               {location}
             </Text>
           </View>
@@ -54,9 +54,9 @@ export default function EventCard({ name, location, date, image, onPress, varian
             <Ionicons
               name="calendar"
               size={14}
-              color={isPopular || isDark ? Theme.colors.white : Theme.colors.primary}
+              color={useLightText ? Theme.colors.white : Theme.colors.primary}
             />
-            <Text style={[styles.infoText, (isPopular || isDark) && styles.popularText]}>
+            <Text style={[styles.infoText, useLightText && styles.lightText]}>
               {date}
             </Text>
           </View>
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#181921',
   },
   pastCard: {
-    backgroundColor: '#E6ECEF',
+    backgroundColor: 'rgba(24, 25, 33, 0.4)',
   },
   textContainer: {
     flex: 1,
@@ -95,10 +95,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Theme.colors.textPrimary,
   },
-  popularName: {
-    color: Theme.colors.white,
-  },
-  darkName: {
+  lightName: {
     color: Theme.colors.white,
   },
   infoGroup: {
@@ -113,7 +110,7 @@ const styles = StyleSheet.create({
     color: Theme.colors.textSecondary,
     marginLeft: 5,
   },
-  popularText: {
+  lightText: {
     color: Theme.colors.white,
   },
   image: {
