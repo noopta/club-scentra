@@ -27,7 +27,9 @@ export default function SignupDetailsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.logoContainer}>
-          <Image source={logo} style={styles.logoImage} resizeMode="contain" />
+          <View style={styles.logoClip}>
+            <Image source={logo} style={styles.logoImage} resizeMode="contain" />
+          </View>
         </View>
 
         <Text style={styles.title}>Welcome to Club Scentra</Text>
@@ -129,10 +131,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Theme.spacing.md,
   },
+  logoClip: {
+    width: 90,
+    height: 72,
+    overflow: 'hidden',
+  },
   logoImage: {
-    width: 80,
-    height: 80,
-    
+    width: 90,
+    height: 90,
   },
   title: {
     fontSize: Theme.fontSize.xxl,

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import { hostedEvents, goingEvents, pastEvents } from '@/constants/MockData';
+import { getCreatedEvents } from '@/constants/CreatedEvents';
 import EventCard from '@/components/EventCard';
 import SearchBar from '@/components/SearchBar';
 
@@ -12,6 +14,15 @@ const headerLogo = require('@/assets/images/club-scentra-text.png');
 export default function MeetsScreen() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [userCreatedEvents, setUserCreatedEvents] = useState(getCreatedEvents());
+
+  useFocusEffect(
+    useCallback(() => {
+      setUserCreatedEvents(getCreatedEvents());
+    }, [])
+  );
+
+  const allHostedEvents = [...hostedEvents, ...userCreatedEvents];
 
   return (
     <View style={styles.container}>
@@ -41,7 +52,7 @@ export default function MeetsScreen() {
         <SearchBar value={searchText} onChangeText={setSearchText} />
 
         <Text style={styles.sectionTitle}>Hosted by Saraaa13</Text>
-        {hostedEvents.map((event) => (
+        {allHostedEvents.map((event) => (
           <EventCard
             key={event.id}
             name={event.name}
@@ -124,7 +135,7 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border,
   },
   filterText: {
-    fontSize: Theme.fontSize.xs,
+    fontSize: Theme.fontSize.sm,
     color: Theme.colors.textPrimary,
     fontWeight: Theme.fontWeight.medium,
   },

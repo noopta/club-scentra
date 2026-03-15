@@ -19,7 +19,9 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.logoContainer}>
-          <Image source={logo} style={styles.logoImage} resizeMode="contain" />
+          <View style={styles.logoClip}>
+            <Image source={logo} style={styles.logoImage} resizeMode="contain" />
+          </View>
         </View>
 
         <Text style={styles.title}>Log into Club Scentra</Text>
@@ -79,9 +81,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Theme.spacing.lg,
   },
+  logoClip: {
+    width: 90,
+    height: 72,
+    overflow: 'hidden',
+  },
   logoImage: {
-    width: 100,
-    height: 100,
+    width: 90,
+    height: 90,
   },
   title: {
     fontSize: Theme.fontSize.xxl,

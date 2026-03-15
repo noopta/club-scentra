@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#181921',
   },
   pastCard: {
-    opacity: 0.7,
+    backgroundColor: '#E6ECEF',
   },
   textContainer: {
     flex: 1,

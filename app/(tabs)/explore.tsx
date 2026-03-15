@@ -88,8 +88,8 @@ const styles = StyleSheet.create({
     height: 35,
   },
   pageTitle: {
-    fontSize: Theme.fontSize.lg,
-    fontWeight: Theme.fontWeight.semibold,
+    fontSize: Theme.fontSize.xl,
+    fontWeight: Theme.fontWeight.bold,
     color: Theme.colors.textPrimary,
     marginBottom: Theme.spacing.sm,
   },

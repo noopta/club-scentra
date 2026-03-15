@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import StepIndicator from '@/components/StepIndicator';
 import RedButton from '@/components/RedButton';
+import { addCreatedEvent } from '@/constants/CreatedEvents';
 
 export default function CreateEventPhotoScreen() {
   const router = useRouter();
@@ -26,7 +27,14 @@ export default function CreateEventPhotoScreen() {
         <RedButton
           title="Create Event"
           onPress={() => {
-            router.replace('/(tabs)/explore');
+            addCreatedEvent({
+              id: Date.now().toString(),
+              name: 'My New Event',
+              location: 'Toronto, ON',
+              date: 'Coming Soon',
+              image: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=400',
+            });
+            router.replace('/(tabs)/meets');
           }}
         />
       </View>
