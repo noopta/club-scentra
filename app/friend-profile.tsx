@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   },
   messageButton: {
     flex: 1,
-    backgroundColor: Theme.colors.border,
+    backgroundColor: '#2F3137',
     borderRadius: Theme.borderRadius.sm,
     paddingVertical: 12,
     alignItems: 'center',
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   messageButtonText: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.textPrimary,
+    color: Theme.colors.white,
   },
   mutualRow: {
     flexDirection: 'row',

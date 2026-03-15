@@ -27,15 +27,14 @@ export default function MeetsScreen() {
 
         <View style={styles.filterRow}>
           <TouchableOpacity style={styles.filterButton}>
-            <Text style={styles.filterText}>Sort by Location</Text>
+            <Ionicons name="location-sharp" size={14} color={Theme.colors.primary} />
+            <Text style={styles.filterText}>Location</Text>
             <Ionicons name="chevron-down" size={14} color={Theme.colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.filterButton}>
-            <Text style={styles.filterText}>Sort by Date</Text>
+            <Ionicons name="calendar" size={14} color={Theme.colors.primary} />
+            <Text style={styles.filterText}>Date</Text>
             <Ionicons name="chevron-down" size={14} color={Theme.colors.textPrimary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterIcon}>
-            <Ionicons name="options-outline" size={20} color={Theme.colors.textPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -62,6 +61,7 @@ export default function MeetsScreen() {
             location={event.location}
             date={event.date}
             image={event.image}
+            variant="dark"
             onPress={() => router.push('/event-detail')}
           />
         ))}
@@ -122,9 +122,6 @@ const styles = StyleSheet.create({
     gap: 6,
     borderWidth: 1,
     borderColor: Theme.colors.border,
-  },
-  filterIcon: {
-    padding: Theme.spacing.sm,
   },
   filterText: {
     fontSize: Theme.fontSize.xs,

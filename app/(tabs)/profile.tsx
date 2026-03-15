@@ -82,8 +82,7 @@ const styles = StyleSheet.create({
   },
   editButton: {
     flex: 1,
-    borderWidth: 2,
-    borderColor: Theme.colors.textPrimary,
+    backgroundColor: '#2F3137',
     borderRadius: Theme.borderRadius.sm,
     paddingVertical: 12,
     alignItems: 'center',
@@ -91,11 +90,11 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.textPrimary,
+    color: Theme.colors.white,
   },
   shareButton: {
     flex: 1,
-    backgroundColor: Theme.colors.border,
+    backgroundColor: '#2F3137',
     borderRadius: Theme.borderRadius.sm,
     paddingVertical: 12,
     alignItems: 'center',
@@ -103,6 +102,6 @@ const styles = StyleSheet.create({
   shareButtonText: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.textPrimary,
+    color: Theme.colors.white,
   },
 });

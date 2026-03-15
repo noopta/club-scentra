@@ -61,6 +61,7 @@ export default function ExploreScreen() {
             location={event.location}
             date={event.date}
             image={event.image}
+            variant="dark"
             onPress={() => router.push('/event-detail')}
           />
         ))}

@@ -44,17 +44,15 @@ export default function SignupScreen() {
         >
           <Text style={styles.continueButtonText}>Continue with email</Text>
         </TouchableOpacity>
-      </ScrollView>
 
-      <TouchableOpacity
-        style={styles.bottomBar}
-        onPress={() => router.push('/(auth)/login')}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.bottomBarText}>
-          Have an account? <Text style={styles.bottomBarLink}>Log in</Text>
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() => router.push('/(auth)/login')}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.loginButtonText}>Have an account? Log in</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -118,16 +116,16 @@ const styles = StyleSheet.create({
     fontWeight: Theme.fontWeight.medium,
     color: Theme.colors.textPrimary,
   },
-  bottomBar: {
+  loginButton: {
     backgroundColor: Theme.colors.black,
-    paddingVertical: 18,
+    borderRadius: Theme.borderRadius.xl,
+    paddingVertical: 16,
     alignItems: 'center',
+    marginTop: Theme.spacing.md,
   },
-  bottomBarText: {
+  loginButtonText: {
     fontSize: Theme.fontSize.md,
+    fontWeight: Theme.fontWeight.medium,
     color: Theme.colors.white,
-  },
-  bottomBarLink: {
-    textDecorationLine: 'underline',
   },
 });

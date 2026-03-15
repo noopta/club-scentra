@@ -9,12 +9,13 @@ interface EventCardProps {
   date: string;
   image: string;
   onPress?: () => void;
-  variant?: 'default' | 'popular' | 'past';
+  variant?: 'default' | 'popular' | 'past' | 'dark';
 }
 
 export default function EventCard({ name, location, date, image, onPress, variant = 'default' }: EventCardProps) {
   const isPopular = variant === 'popular';
   const isPast = variant === 'past';
+  const isDark = variant === 'dark';
 
   return (
     <TouchableOpacity
@@ -22,6 +23,7 @@ export default function EventCard({ name, location, date, image, onPress, varian
         styles.card,
         isPopular && styles.popularCard,
         isPast && styles.pastCard,
+        isDark && styles.darkCard,
       ]}
       onPress={onPress}
       activeOpacity={0.8}
@@ -31,6 +33,7 @@ export default function EventCard({ name, location, date, image, onPress, varian
           style={[
             styles.name,
             isPopular && styles.popularName,
+            isDark && styles.darkName,
           ]}
           numberOfLines={2}
         >
@@ -41,9 +44,9 @@ export default function EventCard({ name, location, date, image, onPress, varian
             <Ionicons
               name="location-sharp"
               size={14}
-              color={isPopular ? Theme.colors.white : Theme.colors.primary}
+              color={isPopular || isDark ? Theme.colors.white : Theme.colors.primary}
             />
-            <Text style={[styles.infoText, isPopular && styles.popularText]}>
+            <Text style={[styles.infoText, (isPopular || isDark) && styles.popularText]}>
               {location}
             </Text>
           </View>
@@ -51,9 +54,9 @@ export default function EventCard({ name, location, date, image, onPress, varian
             <Ionicons
               name="calendar"
               size={14}
-              color={isPopular ? Theme.colors.white : Theme.colors.primary}
+              color={isPopular || isDark ? Theme.colors.white : Theme.colors.primary}
             />
-            <Text style={[styles.infoText, isPopular && styles.popularText]}>
+            <Text style={[styles.infoText, (isPopular || isDark) && styles.popularText]}>
               {date}
             </Text>
           </View>
@@ -76,6 +79,9 @@ const styles = StyleSheet.create({
   popularCard: {
     backgroundColor: Theme.colors.primary,
   },
+  darkCard: {
+    backgroundColor: '#181921',
+  },
   pastCard: {
     opacity: 0.7,
   },
@@ -90,6 +96,9 @@ const styles = StyleSheet.create({
     color: Theme.colors.textPrimary,
   },
   popularName: {
+    color: Theme.colors.white,
+  },
+  darkName: {
     color: Theme.colors.white,
   },
   infoGroup: {
