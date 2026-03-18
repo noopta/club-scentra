@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: Theme.spacing.sm,
     marginBottom: Theme.spacing.md,
   },
