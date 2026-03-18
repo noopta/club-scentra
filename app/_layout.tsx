@@ -27,6 +27,8 @@ export default function RootLayout() {
         <Stack.Screen name="edit-profile" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="messages" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="terms" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="chat" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="create-group" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="dark" />

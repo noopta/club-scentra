@@ -53,16 +53,21 @@ export default function EventDetailScreen() {
         <View style={styles.content}>
           <Text style={styles.eventName}>{EVENT.name}</Text>
 
-          <View style={styles.hostRow}>
+          <TouchableOpacity
+            style={styles.hostRow}
+            onPress={() => router.push('/friend-profile')}
+            activeOpacity={0.8}
+          >
             <Image
               source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200' }}
               style={styles.hostAvatar}
             />
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.hostedBy}>Hosted by</Text>
               <Text style={styles.hostName}>@Saraaa13</Text>
             </View>
-          </View>
+            <Ionicons name="chevron-forward" size={16} color={Theme.colors.textSecondary} />
+          </TouchableOpacity>
 
           <View style={styles.detailsCard}>
             <View style={styles.detailRow}>
