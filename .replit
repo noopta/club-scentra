@@ -81,4 +81,6 @@ args = "Dev Server"
 expertMode = true
 
 [deployment]
-deploymentTarget = "cloudrun"
+deploymentTarget = "static"
+build = ["npx", "expo", "export", "--platform", "web"]
+publicDir = "dist"
