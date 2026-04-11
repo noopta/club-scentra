@@ -79,3 +79,6 @@ args = "Dev Server"
 
 [agent]
 expertMode = true
+
+[deployment]
+deploymentTarget = "cloudrun"
