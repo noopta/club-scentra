@@ -45,14 +45,6 @@ task = "shell.exec"
 args = "npx eas init"
 
 [[workflows.workflow]]
-name = "EAS Update"
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npx eas update --auto"
-
-[[workflows.workflow]]
 name = "EAS Publish Preview iOS"
 mode = "sequential"
 author = "agent"
@@ -63,14 +55,6 @@ args = "npx eas build --platform ios --profile preview --non-interactive"
 
 [workflows.workflow.metadata]
 outputType = "console"
-
-[[workflows.workflow]]
-name = "EAS Publish Preview Android"
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npx eas build --platform android --profile preview"
 
 [[workflows.workflow]]
 name = "Project"
@@ -93,12 +77,12 @@ args = "EAS Submit iOS (TestFlight)"
 name = "EAS Submit iOS (TestFlight)"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "EXPO_TOKEN=$EXPO_TOKEN npx eas submit --platform ios --latest --profile production --non-interactive"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "EXPO_TOKEN=$EXPO_TOKEN EXPO_APPLE_APP_SPECIFIC_PASSWORD=$EXPO_APPLE_APP_SPECIFIC_PASSWORD npx eas submit --platform ios --latest --profile production --non-interactive"
 
 [agent]
 expertMode = true
