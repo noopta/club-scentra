@@ -1,18 +1,45 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import InputField from '@/components/InputField';
 import RedButton from '@/components/RedButton';
+import { users } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const [name, setName] = useState('Sara Nova');
-  const [username, setUsername] = useState('Saraaa13');
-  const [bio, setBio] = useState('Just a girl and her car');
-  const [car, setCar] = useState('');
-  const [location, setLocation] = useState('Toronto');
+  const { user, refreshUser } = useAuth();
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [bio, setBio] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.displayName ?? '');
+      setUsername(user.username ?? '');
+      setBio(user.bio ?? '');
+    }
+  }, [user]);
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      await users.updateMe({
+        displayName: name.trim(),
+        username: username.trim(),
+        bio: bio.trim(),
+      });
+      await refreshUser();
+      router.back();
+    } catch (err: unknown) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'Could not save profile');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -24,17 +51,16 @@ export default function EditProfileScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.avatarSection}>
           <View style={styles.avatarContainer}>
-            <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' }}
-              style={styles.avatar}
-            />
+            {user?.avatarUrl ? (
+              <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, { backgroundColor: Theme.colors.border, alignItems: 'center', justifyContent: 'center' }]}>
+                <Ionicons name="person" size={40} color={Theme.colors.textMuted} />
+              </View>
+            )}
           </View>
           <TouchableOpacity>
             <Text style={styles.changePhotoText}>Change Photo</Text>
@@ -44,63 +70,26 @@ export default function EditProfileScreen() {
         <InputField label="Name" value={name} onChangeText={setName} />
         <InputField label="Username" value={username} onChangeText={setUsername} autoCapitalize="none" />
         <InputField label="Bio" value={bio} onChangeText={setBio} multiline />
-        <InputField label="Car" value={car} onChangeText={setCar} placeholder="e.g. A91 Supra" />
-        <InputField label="Location" value={location} onChangeText={setLocation} />
 
-        <RedButton title="Save" onPress={() => router.back()} />
+        {loading ? (
+          <ActivityIndicator color={Theme.colors.primary} style={{ marginTop: 16 }} />
+        ) : (
+          <RedButton title="Save" onPress={handleSave} />
+        )}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 60,
-    paddingHorizontal: Theme.spacing.md,
-    paddingBottom: Theme.spacing.md,
-  },
-  backButton: {
-    padding: Theme.spacing.sm,
-  },
-  headerTitle: {
-    fontSize: Theme.fontSize.xl,
-    fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  scrollContent: {
-    paddingHorizontal: Theme.spacing.xl,
-    paddingBottom: Theme.spacing.xxl,
-  },
-  avatarSection: {
-    alignItems: 'center',
-    marginBottom: Theme.spacing.xl,
-  },
-  avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: Theme.borderRadius.md,
-    borderWidth: 3,
-    borderColor: Theme.colors.primary,
-    overflow: 'hidden',
-    marginBottom: Theme.spacing.sm,
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
-  },
-  changePhotoText: {
-    fontSize: Theme.fontSize.md,
-    fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.primary,
-  },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 54, paddingHorizontal: Theme.spacing.md, paddingBottom: Theme.spacing.md },
+  backButton: { padding: Theme.spacing.sm },
+  headerTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
+  headerSpacer: { width: 40 },
+  scrollContent: { paddingHorizontal: Theme.spacing.lg, paddingBottom: Theme.spacing.xxl },
+  avatarSection: { alignItems: 'center', marginBottom: Theme.spacing.lg, paddingTop: Theme.spacing.md },
+  avatarContainer: { marginBottom: Theme.spacing.sm },
+  avatar: { width: 90, height: 90, borderRadius: 45 },
+  changePhotoText: { color: Theme.colors.primary, fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium },
 });

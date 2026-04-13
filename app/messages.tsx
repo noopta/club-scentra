@@ -1,13 +1,57 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
-import { messages, groupMessages } from '@/constants/MockData';
+import { messages as messagesApi, Conversation } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
+
+function timeAgo(dateStr: string): string {
+  const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+  if (diff < 60) return 'now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
+}
 
 export default function MessagesScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [tab, setTab] = useState<'direct' | 'groups'>('direct');
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
+    try {
+      const res = await messagesApi.conversations();
+      setConversations(res.conversations);
+    } catch {
+      setConversations([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const direct = conversations.filter(c => c.type === 'DIRECT');
+  const groups = conversations.filter(c => c.type === 'GROUP');
+  const shown = tab === 'direct' ? direct : groups;
+
+  function getDisplayName(conv: Conversation): string {
+    if (conv.type === 'GROUP') return conv.name ?? 'Group Chat';
+    const other = conv.participants.find(p => p.user.id !== user?.id);
+    return other?.user.displayName ?? other?.user.username ?? 'Unknown';
+  }
+
+  function getAvatar(conv: Conversation): string | null {
+    if (conv.type === 'GROUP') return null;
+    const other = conv.participants.find(p => p.user.id !== user?.id);
+    return other?.user.avatarUrl ?? null;
+  }
 
   return (
     <View style={styles.container}>
@@ -16,121 +60,68 @@ export default function MessagesScreen() {
           <Ionicons name="arrow-back" size={24} color={Theme.colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Messages</Text>
-        <TouchableOpacity
-          style={styles.composeButton}
-          onPress={() => tab === 'groups' ? router.push('/create-group') : undefined}
-        >
-          <Ionicons
-            name={tab === 'groups' ? 'people-circle-outline' : 'create-outline'}
-            size={24}
-            color={Theme.colors.textPrimary}
-          />
+        <TouchableOpacity style={styles.composeButton} onPress={() => tab === 'groups' ? router.push('/create-group') : undefined}>
+          <Ionicons name={tab === 'groups' ? 'people-circle-outline' : 'create-outline'} size={24} color={Theme.colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[styles.tab, tab === 'direct' && styles.tabActive]}
-          onPress={() => setTab('direct')}
-        >
+        <TouchableOpacity style={[styles.tab, tab === 'direct' && styles.tabActive]} onPress={() => setTab('direct')}>
           <Ionicons name="chatbubble-outline" size={16} color={tab === 'direct' ? Theme.colors.primary : Theme.colors.textSecondary} />
           <Text style={[styles.tabText, tab === 'direct' && styles.tabTextActive]}>Direct</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, tab === 'groups' && styles.tabActive]}
-          onPress={() => setTab('groups')}
-        >
+        <TouchableOpacity style={[styles.tab, tab === 'groups' && styles.tabActive]} onPress={() => setTab('groups')}>
           <Ionicons name="people-outline" size={16} color={tab === 'groups' ? Theme.colors.primary : Theme.colors.textSecondary} />
           <Text style={[styles.tabText, tab === 'groups' && styles.tabTextActive]}>Groups</Text>
         </TouchableOpacity>
       </View>
 
-      {tab === 'direct' ? (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {messages.map((msg) => (
-            <TouchableOpacity
-              key={msg.id}
-              style={styles.messageCard}
-              activeOpacity={0.75}
-              onPress={() => router.push({
-                pathname: '/chat',
-                params: { id: msg.id, name: msg.name, avatar: msg.avatar }
-              })}
-            >
-              <View style={styles.avatarWrapper}>
-                <Image source={{ uri: msg.avatar }} style={styles.avatar} />
-                <View style={styles.onlineDot} />
-              </View>
-              <View style={styles.messageContent}>
-                <View style={styles.messageTopRow}>
-                  <Text style={[styles.messageName, msg.unread && styles.unreadName]}>
-                    {msg.name}
-                  </Text>
-                  <Text style={[styles.messageTime, msg.unread && styles.unreadTime]}>{msg.time}</Text>
-                </View>
-                <Text style={styles.messageUsername}>@{msg.username}</Text>
-                <Text
-                  style={[styles.messagePreview, msg.unread && styles.unreadPreview]}
-                  numberOfLines={1}
-                >
-                  {msg.lastMessage}
-                </Text>
-              </View>
-              {msg.unread && <View style={styles.unreadDot} />}
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+      {loading ? (
+        <ActivityIndicator color={Theme.colors.primary} style={{ marginTop: 40 }} />
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <TouchableOpacity
-            style={styles.newGroupButton}
-            onPress={() => router.push('/create-group')}
-            activeOpacity={0.8}
-          >
-            <View style={styles.newGroupIcon}>
-              <Ionicons name="add" size={22} color={Theme.colors.white} />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(true); }} />}
+        >
+          {shown.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="chatbubbles-outline" size={48} color={Theme.colors.textMuted} />
+              <Text style={styles.emptyText}>No {tab === 'direct' ? 'direct messages' : 'group chats'} yet</Text>
             </View>
-            <Text style={styles.newGroupText}>Create New Group</Text>
-            <Ionicons name="chevron-forward" size={18} color={Theme.colors.textSecondary} />
-          </TouchableOpacity>
-
-          {groupMessages.map((group) => (
-            <TouchableOpacity
-              key={group.id}
-              style={styles.messageCard}
-              activeOpacity={0.75}
-              onPress={() => router.push({
-                pathname: '/chat',
-                params: { id: group.id, name: group.name, avatar: '', isGroup: 'true' }
-              })}
-            >
-              <View style={styles.groupAvatarStack}>
-                {group.members.slice(0, 2).map((av, i) => (
-                  <Image
-                    key={i}
-                    source={{ uri: av }}
-                    style={[styles.stackedAvatar, i === 1 && styles.stackedAvatarOffset]}
-                  />
-                ))}
-              </View>
-              <View style={styles.messageContent}>
-                <View style={styles.messageTopRow}>
-                  <Text style={[styles.messageName, group.unread && styles.unreadName]}>
-                    {group.name}
-                  </Text>
-                  <Text style={[styles.messageTime, group.unread && styles.unreadTime]}>{group.time}</Text>
+          ) : shown.map((conv) => {
+            const name = getDisplayName(conv);
+            const avatar = getAvatar(conv);
+            const lastMsg = conv.messages[0];
+            return (
+              <TouchableOpacity
+                key={conv.id}
+                style={styles.messageCard}
+                activeOpacity={0.75}
+                onPress={() => router.push({
+                  pathname: '/chat',
+                  params: { id: conv.id, name, isGroup: conv.type === 'GROUP' ? '1' : '0' }
+                })}
+              >
+                <View style={styles.avatarWrapper}>
+                  {avatar ? (
+                    <Image source={{ uri: avatar }} style={styles.avatar} />
+                  ) : (
+                    <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                      <Ionicons name={conv.type === 'GROUP' ? 'people' : 'person'} size={22} color={Theme.colors.textMuted} />
+                    </View>
+                  )}
                 </View>
-                <Text style={styles.messageUsername}>{group.memberCount} members</Text>
-                <Text
-                  style={[styles.messagePreview, group.unread && styles.unreadPreview]}
-                  numberOfLines={1}
-                >
-                  {group.lastMessage}
-                </Text>
-              </View>
-              {group.unread && <View style={styles.unreadDot} />}
-            </TouchableOpacity>
-          ))}
+                <View style={styles.messageInfo}>
+                  <View style={styles.messageTop}>
+                    <Text style={styles.messageName} numberOfLines={1}>{name}</Text>
+                    {lastMsg && <Text style={styles.messageTime}>{timeAgo(lastMsg.createdAt)}</Text>}
+                  </View>
+                  {lastMsg && <Text style={styles.messagePreview} numberOfLines={1}>{lastMsg.body}</Text>}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       )}
     </View>
@@ -138,181 +129,26 @@ export default function MessagesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 54 : 40,
-    paddingHorizontal: Theme.spacing.md,
-    paddingBottom: Theme.spacing.md,
-    backgroundColor: Theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
-  },
-  backButton: {
-    padding: Theme.spacing.sm,
-  },
-  headerTitle: {
-    fontSize: Theme.fontSize.xl,
-    fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
-  },
-  composeButton: {
-    padding: Theme.spacing.sm,
-  },
-  tabRow: {
-    flexDirection: 'row',
-    backgroundColor: Theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    gap: 6,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    borderBottomColor: Theme.colors.primary,
-  },
-  tabText: {
-    fontSize: Theme.fontSize.sm,
-    fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.textSecondary,
-  },
-  tabTextActive: {
-    color: Theme.colors.primary,
-    fontWeight: Theme.fontWeight.bold,
-  },
-  scrollContent: {
-    paddingHorizontal: Theme.spacing.md,
-    paddingTop: Theme.spacing.md,
-    paddingBottom: Theme.spacing.xl,
-  },
-  newGroupButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.white,
-    borderRadius: Theme.borderRadius.md,
-    padding: Theme.spacing.md,
-    marginBottom: Theme.spacing.md,
-    gap: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  newGroupIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: Theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  newGroupText: {
-    flex: 1,
-    fontSize: Theme.fontSize.md,
-    fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.textPrimary,
-  },
-  messageCard: {
-    backgroundColor: Theme.colors.white,
-    borderRadius: Theme.borderRadius.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Theme.spacing.md,
-    marginBottom: Theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  avatarWrapper: {
-    position: 'relative',
-    marginRight: Theme.spacing.md,
-  },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-  },
-  onlineDot: {
-    position: 'absolute',
-    bottom: 1,
-    right: 1,
-    width: 13,
-    height: 13,
-    borderRadius: 7,
-    backgroundColor: '#22C55E',
-    borderWidth: 2,
-    borderColor: Theme.colors.white,
-  },
-  groupAvatarStack: {
-    width: 52,
-    height: 52,
-    marginRight: Theme.spacing.md,
-    position: 'relative',
-  },
-  stackedAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    position: 'absolute',
-    borderWidth: 2,
-    borderColor: Theme.colors.white,
-  },
-  stackedAvatarOffset: {
-    bottom: 0,
-    right: 0,
-  },
-  messageContent: {
-    flex: 1,
-  },
-  messageTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 1,
-  },
-  messageName: {
-    fontSize: Theme.fontSize.md,
-    fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.textPrimary,
-  },
-  unreadName: {
-    fontWeight: Theme.fontWeight.bold,
-  },
-  messageUsername: {
-    fontSize: Theme.fontSize.xs,
-    color: Theme.colors.textMuted,
-    marginBottom: 2,
-  },
-  messageTime: {
-    fontSize: Theme.fontSize.xs,
-    color: Theme.colors.textMuted,
-  },
-  unreadTime: {
-    color: Theme.colors.primary,
-    fontWeight: Theme.fontWeight.medium,
-  },
-  messagePreview: {
-    fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textSecondary,
-  },
-  unreadPreview: {
-    fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
-  },
-  unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: Theme.colors.primary,
-    marginLeft: Theme.spacing.sm,
-  },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 54, paddingHorizontal: Theme.spacing.md, paddingBottom: Theme.spacing.md, backgroundColor: Theme.colors.white, borderBottomWidth: 1, borderBottomColor: Theme.colors.border },
+  backButton: { padding: Theme.spacing.sm },
+  headerTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
+  composeButton: { padding: Theme.spacing.sm },
+  tabRow: { flexDirection: 'row', backgroundColor: Theme.colors.white, borderBottomWidth: 1, borderBottomColor: Theme.colors.border },
+  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 },
+  tabActive: { borderBottomWidth: 2, borderBottomColor: Theme.colors.primary },
+  tabText: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.medium },
+  tabTextActive: { color: Theme.colors.primary },
+  scrollContent: { paddingVertical: Theme.spacing.sm },
+  messageCard: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Theme.spacing.md, paddingVertical: Theme.spacing.md, borderBottomWidth: 1, borderBottomColor: Theme.colors.border, backgroundColor: Theme.colors.white },
+  avatarWrapper: { marginRight: Theme.spacing.md },
+  avatar: { width: 50, height: 50, borderRadius: 25 },
+  avatarPlaceholder: { backgroundColor: Theme.colors.border, alignItems: 'center', justifyContent: 'center' },
+  messageInfo: { flex: 1 },
+  messageTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
+  messageName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textPrimary, flex: 1 },
+  messageTime: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, marginLeft: 8 },
+  messagePreview: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary },
+  emptyState: { alignItems: 'center', paddingVertical: 60 },
+  emptyText: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, marginTop: Theme.spacing.md },
 });

@@ -1,15 +1,34 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
 import InputField from '@/components/InputField';
+import { useAuth } from '@/lib/AuthContext';
 
 const logo = require('@/assets/images/logo.png');
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const { login } = useAuth();
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!identifier.trim() || !password) {
+      Alert.alert('Missing fields', 'Please enter your username/email and password.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await login(identifier.trim(), password);
+      router.replace('/(tabs)/explore');
+    } catch (err: unknown) {
+      Alert.alert('Login failed', err instanceof Error ? err.message : 'Invalid credentials');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -38,8 +57,8 @@ export default function LoginScreen() {
 
         <InputField
           label="Username/Email"
-          value={email}
-          onChangeText={setEmail}
+          value={identifier}
+          onChangeText={setIdentifier}
           autoCapitalize="none"
           keyboardType="email-address"
         />
@@ -52,11 +71,16 @@ export default function LoginScreen() {
         />
 
         <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => router.replace('/(tabs)/explore')}
+          style={[styles.loginButton, loading && styles.buttonDisabled]}
+          onPress={handleLogin}
           activeOpacity={0.8}
+          disabled={loading}
         >
-          <Text style={styles.loginButtonText}>Log In</Text>
+          {loading ? (
+            <ActivityIndicator color={Theme.colors.textPrimary} />
+          ) : (
+            <Text style={styles.loginButtonText}>Log In</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -128,6 +152,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Theme.colors.border,
     marginTop: Theme.spacing.md,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   loginButtonText: {
     fontSize: Theme.fontSize.md,

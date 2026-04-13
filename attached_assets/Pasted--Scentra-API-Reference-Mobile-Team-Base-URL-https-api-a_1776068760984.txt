@@ -1,0 +1,909 @@
+# Scentra API Reference — Mobile Team
+
+**Base URL:** `https://api.airthreads.ai:4014/api`
+
+**Auth:** All protected endpoints require an `Authorization: Bearer <accessToken>` header.  
+**Content-Type:** `application/json` for all request bodies.  
+**Token lifetime:** Access token = 15 min · Refresh token = 7 days.
+
+---
+
+## Table of Contents
+
+1. [Auth](#1-auth)
+2. [Users](#2-users)
+3. [Events](#3-events)
+4. [Meets (My Events)](#4-meets-my-events)
+5. [Friends](#5-friends)
+6. [Messages](#6-messages)
+7. [Social](#7-social)
+8. [Uploads](#8-uploads)
+9. [Common Types](#9-common-types)
+10. [Error Format](#10-error-format)
+
+---
+
+## 1. Auth
+
+### POST `/auth/register`
+Create a new account.
+
+**Used in:** `app/(auth)/signup-details.tsx` — "Create account" button
+
+**Request**
+```json
+{
+  "username": "saraaa13",
+  "email": "sara@example.com",
+  "password": "SecurePass1!",
+  "displayName": "Sara Nova"
+}
+```
+
+**Validation rules**
+- `username` — 2–32 characters
+- `password` — min 8 chars, must contain 1 uppercase letter and 1 number or symbol
+- `displayName` — optional, defaults to username
+
+**Response `201`**
+```json
+{
+  "accessToken": "eyJ...",
+  "refreshToken": "eyJ...",
+  "expiresIn": "15m",
+  "user": {
+    "id": "clxyz123",
+    "username": "saraaa13",
+    "email": "sara@example.com",
+    "displayName": "Sara Nova",
+    "avatarUrl": null,
+    "bio": null,
+    "createdAt": "2025-04-13T00:00:00.000Z",
+    "settings": {
+      "pushNotifications": true,
+      "emailNotifications": false,
+      "darkMode": false,
+      "locationServices": true
+    }
+  }
+}
+```
+
+**Errors**
+| Status | Meaning |
+|--------|---------|
+| 400 | Password too weak |
+| 409 | Username or email already in use |
+
+---
+
+### POST `/auth/login-identifier`
+Login with either username or email.
+
+**Used in:** `app/(auth)/login.tsx` — "Log In" button
+
+**Request**
+```json
+{
+  "identifier": "saraaa13",
+  "password": "SecurePass1!"
+}
+```
+> `identifier` accepts either a username or email address.
+
+**Response `200`** — same shape as register response above.
+
+**Errors**
+| Status | Meaning |
+|--------|---------|
+| 401 | Invalid credentials |
+
+---
+
+### POST `/auth/login`
+Login with email only (alternative endpoint).
+
+**Used in:** Not currently used in app (use `login-identifier` instead)
+
+**Request**
+```json
+{
+  "email": "sara@example.com",
+  "password": "SecurePass1!"
+}
+```
+
+**Response `200`** — same shape as register response.
+
+---
+
+### POST `/auth/refresh`
+Exchange a refresh token for a new access token.
+
+**Used in:** `src/lib/api.ts` — auto-called on 401 responses
+
+**Request**
+```json
+{
+  "refreshToken": "eyJ..."
+}
+```
+
+**Response `200`** — same shape as register response.
+
+**Errors**
+| Status | Meaning |
+|--------|---------|
+| 401 | Invalid or expired refresh token |
+
+---
+
+### POST `/auth/google`
+Authenticate with a Google ID token (from Google Sign-In SDK).
+
+**Used in:** Not yet wired — `app/(auth)/login.tsx` has Google button (no-op currently)
+
+**Request**
+```json
+{
+  "idToken": "<google-id-token>"
+}
+```
+
+**Response `200`** — same shape as register response.
+
+---
+
+## 2. Users
+
+### GET `/users/me` 🔒
+Get the currently authenticated user's profile.
+
+**Used in:** `app/(tabs)/profile.tsx` via `useAuth()` / `refreshUser()`, `app/settings.tsx`
+
+**Response `200`**
+```json
+{
+  "id": "clxyz123",
+  "username": "saraaa13",
+  "email": "sara@example.com",
+  "displayName": "Sara Nova",
+  "avatarUrl": "https://example.com/avatar.jpg",
+  "bio": "Just a girl and her car",
+  "createdAt": "2025-04-13T00:00:00.000Z",
+  "settings": {
+    "pushNotifications": true,
+    "emailNotifications": false,
+    "darkMode": false,
+    "locationServices": true
+  }
+}
+```
+
+---
+
+### PATCH `/users/me` 🔒
+Update the current user's profile.
+
+**Used in:** `app/edit-profile.tsx` — "Save" button
+
+**Request** (all fields optional)
+```json
+{
+  "displayName": "Sara Nova",
+  "username": "saraaa13",
+  "bio": "Just a girl and her car",
+  "avatarUrl": "https://example.com/avatar.jpg"
+}
+```
+> Pass `""` for `avatarUrl` to clear it.
+
+**Response `200`** — updated public user profile (no email, includes follower counts):
+```json
+{
+  "id": "clxyz123",
+  "username": "saraaa13",
+  "displayName": "Sara Nova",
+  "avatarUrl": "https://example.com/avatar.jpg",
+  "bio": "Just a girl and her car",
+  "eventsCount": 5,
+  "followersCount": 120,
+  "followingCount": 80,
+  "postsCount": 14,
+  "isFollowing": false,
+  "createdAt": "2025-04-13T00:00:00.000Z"
+}
+```
+
+**Errors**
+| Status | Meaning |
+|--------|---------|
+| 409 | Username already taken |
+
+---
+
+### GET `/users/me/settings` 🔒
+Get notification and preference settings.
+
+**Used in:** `app/settings.tsx` — loads toggles on mount
+
+**Response `200`**
+```json
+{
+  "pushNotifications": true,
+  "emailNotifications": false,
+  "darkMode": false,
+  "locationServices": true
+}
+```
+
+---
+
+### PATCH `/users/me/settings` 🔒
+Update settings. Send only fields you want to change.
+
+**Used in:** `app/settings.tsx` — each toggle fires immediately on change
+
+**Request** (all fields optional)
+```json
+{
+  "pushNotifications": false,
+  "emailNotifications": true,
+  "darkMode": false,
+  "locationServices": true
+}
+```
+
+**Response `200`** — same shape as GET settings.
+
+---
+
+### GET `/users/search?q=<query>` 🔒
+Search users by username or display name.
+
+**Used in:** Not yet wired in app (available for friend-search feature)
+
+**Query params**
+| Param | Type | Description |
+|-------|------|-------------|
+| `q` | string | Search term (required) |
+
+**Response `200`**
+```json
+[
+  {
+    "id": "clxyz456",
+    "username": "driftking",
+    "displayName": "Drift King",
+    "avatarUrl": null
+  }
+]
+```
+
+---
+
+### GET `/users/:id`
+Get any user's public profile. Optionally authenticated to get `isFollowing`.
+
+**Used in:** `app/friend-profile.tsx` (not yet wired — passes `id` param)
+
+**Response `200`**
+```json
+{
+  "id": "clxyz456",
+  "username": "driftking",
+  "displayName": "Drift King",
+  "avatarUrl": null,
+  "bio": "600hp daily driver",
+  "eventsCount": 12,
+  "followersCount": 340,
+  "followingCount": 95,
+  "postsCount": 27,
+  "isFollowing": true,
+  "createdAt": "2025-03-01T00:00:00.000Z"
+}
+```
+
+---
+
+## 3. Events
+
+### POST `/events` 🔒
+Create a new event.
+
+**Used in:** `app/create-event-photo.tsx` (final step of create flow — not yet wired)
+
+**Request**
+```json
+{
+  "title": "Downtown Drive",
+  "description": "Epic cruise through the city. All cars welcome.",
+  "imageUrl": "https://s3.../event.jpg",
+  "startAt": "2025-08-02T19:00:00.000Z",
+  "endAt": "2025-08-03T00:00:00.000Z",
+  "addressLine": "123 Queen St W",
+  "city": "Toronto",
+  "region": "ON",
+  "postalCode": "M5H 2M9",
+  "country": "CA",
+  "latitude": 43.6532,
+  "longitude": -79.3832
+}
+```
+
+**Required:** `title`, `description`, `startAt`  
+**Optional:** everything else
+
+**Response `201`** — full Event object (see [Event type](#event-object))
+
+---
+
+### GET `/events/explore`
+Browse all public events. No auth required; pass token to get `viewerStatus`.
+
+**Used in:** `app/(tabs)/explore.tsx` — on load, search, filter change, and pull-to-refresh
+
+**Query params**
+| Param | Type | Description |
+|-------|------|-------------|
+| `q` | string | Full-text search on title/description |
+| `location` | string | Filter by city or region |
+| `dateFrom` | ISO string | Events starting after this date |
+| `dateTo` | ISO string | Events starting before this date |
+| `sort` | `popular` \| `nearest` | Sort order (nearest requires lat/lng) |
+| `lat` | number | Viewer latitude (for nearest sort) |
+| `lng` | number | Viewer longitude (for nearest sort) |
+| `radiusKm` | number | Filter to radius around lat/lng |
+| `skip` | number | Pagination offset |
+| `take` | number | Page size (default: server default) |
+
+**Response `200`**
+```json
+{
+  "events": [ /* Event objects */ ]
+}
+```
+
+---
+
+### GET `/events/:id`
+Get a single event by ID. No auth required; pass token to get `viewerStatus`.
+
+**Used in:** `app/event-detail.tsx` — loads on screen mount using `params.id`
+
+**Response `200`** — full Event object (see [Event type](#event-object))
+
+**Errors**
+| Status | Meaning |
+|--------|---------|
+| 404 | Event not found |
+
+---
+
+### POST `/events/:id/rsvp` 🔒
+Set your RSVP status for an event.
+
+**Used in:** `app/event-detail.tsx` — "I'm Going" and "Interested" buttons
+
+**Request**
+```json
+{
+  "status": "GOING"
+}
+```
+> `status` must be `"GOING"` or `"INTERESTED"`
+
+**Response `200`** — full Event object with updated counts and `viewerStatus`.
+
+---
+
+### DELETE `/events/:id/rsvp` 🔒
+Remove your RSVP from an event.
+
+**Used in:** Not yet wired (needed to un-RSVP)
+
+**Response `200`**
+```json
+{ "ok": true }
+```
+
+---
+
+## 4. Meets (My Events)
+
+### GET `/me/meets?section=<section>` 🔒
+Get the current user's events by section.
+
+**Used in:** `app/(tabs)/meets.tsx` — loads all 4 sections in parallel on focus
+
+**Query params**
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `section` | string | ✅ | `hosting`, `going`, `saved`, or `past` |
+| `q` | string | | Search filter |
+| `location` | string | | Location filter |
+| `dateFrom` | ISO string | | Date range start |
+| `dateTo` | ISO string | | Date range end |
+
+**Response `200`**
+```json
+{
+  "events": [ /* Event objects */ ]
+}
+```
+
+**Section meanings**
+| Value | Returns |
+|-------|---------|
+| `hosting` | Events the user created |
+| `going` | Events the user RSVPed `GOING` |
+| `saved` | Events the user RSVPed `INTERESTED` |
+| `past` | User's hosted or attending events with `startAt` in the past |
+
+---
+
+## 5. Friends
+
+### GET `/friends` 🔒
+List all accepted friends.
+
+**Used in:** `app/(tabs)/friends.tsx` — on screen focus
+
+**Response `200`**
+```json
+{
+  "friends": [
+    {
+      "id": "clxyz456",
+      "username": "driftking",
+      "displayName": "Drift King",
+      "avatarUrl": null
+    }
+  ]
+}
+```
+
+---
+
+### GET `/friends/requests/incoming` 🔒
+List incoming pending friend requests.
+
+**Used in:** Not yet wired (available for notifications/requests screen)
+
+**Response `200`**
+```json
+{
+  "requests": [
+    {
+      "id": "req_abc123",
+      "requester": {
+        "id": "clxyz789",
+        "username": "turbogreg",
+        "displayName": "Greg",
+        "avatarUrl": null
+      }
+    }
+  ]
+}
+```
+
+---
+
+### POST `/friends/requests` 🔒
+Send a friend request.
+
+**Used in:** Not yet wired (needed on friend profile / search result screens)
+
+**Request**
+```json
+{
+  "addresseeId": "clxyz789"
+}
+```
+
+**Response `201`** — the created Friendship record.
+
+**Errors**
+| Status | Meaning |
+|--------|---------|
+| 400 | Already friends or request already exists |
+
+---
+
+### POST `/friends/requests/:id/accept` 🔒
+Accept an incoming friend request.
+
+**Used in:** Not yet wired
+
+**Response `200`** — the updated Friendship record.
+
+---
+
+### DELETE `/friends/requests/:id` 🔒
+Decline or cancel a friend request.
+
+**Used in:** Not yet wired
+
+**Response `200`**
+```json
+{ "ok": true }
+```
+
+---
+
+## 6. Messages
+
+### GET `/messages/conversations` 🔒
+List all conversations (direct + group) for the current user.
+
+**Used in:** `app/messages.tsx` — on screen focus, separated into Direct/Groups tabs
+
+**Response `200`**
+```json
+{
+  "conversations": [
+    {
+      "id": "conv_abc123",
+      "type": "DIRECT",
+      "name": null,
+      "updatedAt": "2025-04-13T12:00:00.000Z",
+      "participants": [
+        {
+          "user": {
+            "id": "clxyz123",
+            "username": "saraaa13",
+            "displayName": "Sara Nova",
+            "avatarUrl": null
+          }
+        }
+      ],
+      "messages": [
+        {
+          "id": "msg_001",
+          "body": "See you at the meet!",
+          "createdAt": "2025-04-13T12:00:00.000Z",
+          "senderId": "clxyz456"
+        }
+      ]
+    }
+  ]
+}
+```
+> `messages` array contains only the **last message** (for preview). Fetch full thread separately.  
+> For direct chats: `name` is null — derive display name from the other participant.  
+> For group chats: `type` is `"GROUP"`, `name` is the group name.
+
+---
+
+### POST `/messages/conversations/direct` 🔒
+Start or retrieve a direct conversation with another user.
+
+**Used in:** Not yet wired (needed on friend profile screen to open a DM)
+
+**Request**
+```json
+{
+  "otherUserId": "clxyz456"
+}
+```
+
+**Response `201`** — the Conversation object (existing or newly created).
+
+---
+
+### GET `/messages/conversations/:id/messages` 🔒
+Fetch messages in a conversation. Paginated oldest-first (after reversing).
+
+**Used in:** `app/chat.tsx` — not yet wired
+
+**Query params**
+| Param | Type | Description |
+|-------|------|-------------|
+| `cursor` | string | Message ID to paginate from (load older) |
+| `take` | number | Page size (default 50) |
+
+**Response `200`**
+```json
+{
+  "messages": [
+    {
+      "id": "msg_001",
+      "body": "See you at the meet!",
+      "createdAt": "2025-04-13T12:00:00.000Z",
+      "senderId": "clxyz123",
+      "sender": {
+        "id": "clxyz123",
+        "username": "saraaa13",
+        "displayName": "Sara Nova",
+        "avatarUrl": null
+      }
+    }
+  ]
+}
+```
+
+---
+
+### POST `/messages/conversations/:id/messages` 🔒
+Send a message to a conversation.
+
+**Used in:** `app/chat.tsx` — not yet wired
+
+**Request**
+```json
+{
+  "body": "See you at the meet!"
+}
+```
+> Max 8000 characters.
+
+**Response `201`** — the created Message object (same shape as above).
+
+**Errors**
+| Status | Meaning |
+|--------|---------|
+| 403 | Not a participant in this conversation |
+
+---
+
+## 7. Social
+
+### POST `/social/follow/:userId` 🔒
+Follow a user.
+
+**Used in:** Not yet wired (needed on friend profile / user search screens)
+
+**Response `200`**
+```json
+{ "ok": true }
+```
+
+---
+
+### DELETE `/social/follow/:userId` 🔒
+Unfollow a user.
+
+**Used in:** Not yet wired
+
+**Response `200`**
+```json
+{ "ok": true }
+```
+
+---
+
+### POST `/social/posts` 🔒
+Create a photo post on your profile.
+
+**Used in:** Not yet wired — `app/(tabs)/profile.tsx` has "Post Photo" modal (no-op currently)
+
+**Request**
+```json
+{
+  "imageUrl": "https://s3.../photo.jpg",
+  "caption": "Clean meet tonight 🔥"
+}
+```
+> Upload image first via `/api/uploads`, then pass the returned URL here.  
+> `caption` max 2000 characters, optional.
+
+**Response `201`**
+```json
+{
+  "id": "post_abc123",
+  "imageUrl": "https://s3.../photo.jpg",
+  "caption": "Clean meet tonight 🔥",
+  "createdAt": "2025-04-13T00:00:00.000Z",
+  "authorId": "clxyz123"
+}
+```
+
+---
+
+### GET `/social/users/:userId/posts`
+List a user's posts. Public endpoint.
+
+**Used in:** `app/(tabs)/profile.tsx` — populates the photo grid
+
+**Response `200`**
+```json
+{
+  "posts": [
+    {
+      "id": "post_abc123",
+      "imageUrl": "https://s3.../photo.jpg",
+      "caption": "Clean meet tonight 🔥",
+      "createdAt": "2025-04-13T00:00:00.000Z",
+      "authorId": "clxyz123"
+    }
+  ]
+}
+```
+
+---
+
+### POST `/social/stories` 🔒
+Create a story (expires after `hoursValid` hours).
+
+**Used in:** Not yet wired
+
+**Request**
+```json
+{
+  "imageUrl": "https://s3.../story.jpg",
+  "hoursValid": 24
+}
+```
+> `hoursValid` range: 1–168 (7 days). Defaults to 24.
+
+**Response `201`** — the created Story object.
+
+---
+
+### GET `/social/users/:userId/stories`
+List a user's currently active (non-expired) stories.
+
+**Used in:** Not yet wired
+
+**Response `200`**
+```json
+{
+  "stories": [
+    {
+      "id": "story_abc",
+      "imageUrl": "https://s3.../story.jpg",
+      "expiresAt": "2025-04-14T00:00:00.000Z",
+      "createdAt": "2025-04-13T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+## 8. Uploads
+
+### POST `/uploads` 🔒
+Upload an image. Returns a public URL to use in posts, events, avatars, etc.
+
+**Used in:** Not yet wired as a standalone flow — needed before creating posts or events with images
+
+**Request** — `multipart/form-data` (NOT JSON)
+| Field | Type | Description |
+|-------|------|-------------|
+| `file` | File | Image file (JPEG, PNG, WebP, or GIF) |
+
+> Max file size: **12 MB**
+
+**Response `201`**
+```json
+{
+  "url": "https://scentra-s3-bucket-aws.s3.us-east-2.amazonaws.com/uploads/1712345678-abc123.jpg",
+  "key": "uploads/1712345678-abc123.jpg"
+}
+```
+
+**Usage pattern (create post with image)**
+```
+1. POST /api/uploads  { file: <image> }  → get url
+2. POST /api/social/posts  { imageUrl: url, caption: "..." }
+```
+
+**Errors**
+| Status | Meaning |
+|--------|---------|
+| 400 | No file attached or wrong field name |
+| 413 | File exceeds 12 MB |
+
+---
+
+## 9. Common Types
+
+### Event Object
+Returned by `/events/explore`, `/events/:id`, `/me/meets`, and RSVP endpoints.
+
+```json
+{
+  "id": "evt_abc123",
+  "title": "Downtown Drive",
+  "description": "Epic cruise through the city.",
+  "imageUrl": "https://s3.../event.jpg",
+  "startAt": "2025-08-02T19:00:00.000Z",
+  "endAt": "2025-08-03T00:00:00.000Z",
+  "addressLine": "123 Queen St W",
+  "city": "Toronto",
+  "region": "ON",
+  "postalCode": "M5H 2M9",
+  "country": "CA",
+  "latitude": 43.6532,
+  "longitude": -79.3832,
+  "host": {
+    "id": "clxyz123",
+    "username": "saraaa13",
+    "displayName": "Sara Nova",
+    "avatarUrl": null
+  },
+  "goingCount": 47,
+  "interestedCount": 12,
+  "viewerStatus": "GOING"
+}
+```
+
+> `viewerStatus` — `"GOING"`, `"INTERESTED"`, or `null` (unauthenticated or no RSVP)  
+> `endAt`, `imageUrl`, `addressLine`, `postalCode`, `latitude`, `longitude` — all nullable
+
+---
+
+### Public User Object
+Returned by `/users/:id`, `/friends`, and embedded in other responses.
+
+```json
+{
+  "id": "clxyz123",
+  "username": "saraaa13",
+  "displayName": "Sara Nova",
+  "avatarUrl": "https://s3.../avatar.jpg",
+  "bio": "Just a girl and her car",
+  "eventsCount": 5,
+  "followersCount": 120,
+  "followingCount": 80,
+  "postsCount": 14,
+  "isFollowing": false,
+  "createdAt": "2025-04-13T00:00:00.000Z"
+}
+```
+
+---
+
+## 10. Error Format
+
+All errors return JSON in this shape:
+
+```json
+{
+  "error": "Username or email already in use"
+}
+```
+
+| Status | Meaning |
+|--------|---------|
+| 400 | Bad request / validation failed |
+| 401 | Missing or invalid token / wrong credentials |
+| 403 | Forbidden (authenticated but not allowed) |
+| 404 | Resource not found |
+| 409 | Conflict (duplicate username, already friends, etc.) |
+| 500 | Internal server error |
+
+---
+
+## Auth Header Pattern
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+Tokens expire after **15 minutes**. When any request returns `401`, call `POST /auth/refresh` with the stored refresh token to get a new pair. The mobile client in `src/lib/api.ts` does this automatically.
+
+---
+
+## Screens → Endpoints Map
+
+| Screen | Endpoints Used |
+|--------|---------------|
+| `(auth)/login.tsx` | `POST /auth/login-identifier` |
+| `(auth)/signup-details.tsx` | `POST /auth/register` |
+| `(tabs)/explore.tsx` | `GET /events/explore` |
+| `(tabs)/meets.tsx` | `GET /me/meets?section=hosting` `GET /me/meets?section=going` `GET /me/meets?section=saved` `GET /me/meets?section=past` |
+| `(tabs)/profile.tsx` | `GET /users/me` · `GET /social/users/:id/posts` |
+| `(tabs)/friends.tsx` | `GET /friends` |
+| `event-detail.tsx` | `GET /events/:id` · `POST /events/:id/rsvp` |
+| `edit-profile.tsx` | `GET /users/me` (pre-fill) · `PATCH /users/me` |
+| `settings.tsx` | `GET /users/me/settings` · `PATCH /users/me/settings` |
+| `messages.tsx` | `GET /messages/conversations` |
+| `chat.tsx` | `GET /messages/conversations/:id/messages` · `POST /messages/conversations/:id/messages` *(not yet wired)* |
+| `friend-profile.tsx` | `GET /users/:id` *(not yet wired)* |
+| `create-event-*.tsx` | `POST /api/uploads` · `POST /events` *(not yet wired)* |
+
+---
+
+*Last updated: April 2026 · API server: `https://api.airthreads.ai:4014`*
