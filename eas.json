@@ -15,10 +15,20 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "distribution": "store",
+      "ios": {
+        "simulator": false
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "adibaalif@hotmail.com",
+        "ascAppId": "com.clubscentra.app",
+        "appleTeamId": "59S7N8A28V"
+      }
+    }
   }
 }
