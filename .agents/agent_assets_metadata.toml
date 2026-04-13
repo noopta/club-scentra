@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "ymUvHFOR7ynhbaHUWPddF"
+uri = "file://screenshots/expo-qr.png"
+type = "image"
+title = "Expo Go QR Code — Club Scentra"
