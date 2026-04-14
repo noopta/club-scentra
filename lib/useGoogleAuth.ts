@@ -23,6 +23,7 @@ export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => 
       scopes: ['openid', 'profile', 'email'],
       redirectUri,
       responseType: AuthSession.ResponseType.Token,
+      usePKCE: false,
     },
     discovery
   );
