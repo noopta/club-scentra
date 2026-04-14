@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
 import StepIndicator from '@/components/StepIndicator';
@@ -10,6 +10,17 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const [eventName, setEventName] = useState('');
   const [aboutEvent, setAboutEvent] = useState('');
+
+  const handleNext = () => {
+    if (!eventName.trim()) {
+      Alert.alert('Required', 'Please enter an event name.');
+      return;
+    }
+    router.push({
+      pathname: '/create-event-location',
+      params: { title: eventName.trim(), description: aboutEvent.trim() },
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -24,6 +35,7 @@ export default function CreateEventScreen() {
             label="Event Name"
             value={eventName}
             onChangeText={setEventName}
+            placeholder="e.g. Downtown Drive"
           />
 
           <InputField
@@ -37,10 +49,7 @@ export default function CreateEventScreen() {
             containerStyle={styles.aboutContainer}
           />
 
-          <RedButton
-            title="Next: Location"
-            onPress={() => router.push('/create-event-location')}
-          />
+          <RedButton title="Next: Location" onPress={handleNext} />
         </View>
       </View>
     </SafeAreaView>
@@ -48,32 +57,10 @@ export default function CreateEventScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: Theme.spacing.xl,
-    paddingTop: Theme.spacing.xxl,
-  },
-  title: {
-    fontSize: Theme.fontSize.xxxl,
-    fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.xs,
-  },
-  subtitle: {
-    fontSize: Theme.fontSize.md,
-    color: Theme.colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.xxl,
-  },
-  formContainer: {
-    gap: Theme.spacing.md,
-  },
-  aboutContainer: {
-    marginBottom: 0,
-  },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  content: { flex: 1, paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.xxl },
+  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xs },
+  subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xxl },
+  formContainer: { gap: Theme.spacing.md },
+  aboutContainer: { marginBottom: 0 },
 });

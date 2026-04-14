@@ -1,82 +1,85 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
+import { useAuth } from '@/lib/AuthContext';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const logo = require('@/assets/images/logo.png');
 
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+
+const discovery = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+};
+
 export default function GoogleAuthScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<'choose' | 'loading' | 'confirm'>('choose');
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
 
-  const mockAccounts = [
-    { email: 'sara.nova@gmail.com', name: 'Sara Nova', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200' },
-    { email: 'saraaa13@gmail.com', name: 'Saraaa13', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200' },
-  ];
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'clubscentra' });
 
-  const handleSelectAccount = () => {
-    setStep('loading');
-    setTimeout(() => {
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: GOOGLE_CLIENT_ID,
+      scopes: ['openid', 'profile', 'email'],
+      redirectUri,
+      responseType: AuthSession.ResponseType.Token,
+    },
+    discovery
+  );
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { access_token } = response.params;
+      handleGoogleToken(access_token);
+    } else if (response?.type === 'error') {
+      Alert.alert('Google Sign-In failed', response.error?.message ?? 'Something went wrong');
+      setLoading(false);
+    }
+  }, [response]);
+
+  const handleGoogleToken = async (accessToken: string) => {
+    setLoading(true);
+    try {
+      const userInfoRes = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const userInfo = await userInfoRes.json();
+      const idToken = userInfo.id;
+      const { auth } = await import('@/lib/api');
+      const result = await auth.google(idToken);
+      const { saveTokens } = await import('@/lib/api');
+      await saveTokens(result.accessToken, result.refreshToken);
       router.replace('/(tabs)/explore');
-    }, 2000);
+    } catch (err: unknown) {
+      Alert.alert('Sign-in failed', err instanceof Error ? err.message : 'Could not complete Google sign-in');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={22} color={Theme.colors.textPrimary} />
-      </TouchableOpacity>
+  const handlePress = async () => {
+    if (!GOOGLE_CLIENT_ID) {
+      Alert.alert(
+        'Not configured',
+        'Google Sign-In requires a Google Client ID. Please use email/password login for now.'
+      );
+      return;
+    }
+    setLoading(true);
+    await promptAsync();
+  };
 
-      {step === 'choose' && (
-        <View style={styles.content}>
-          <View style={styles.googleLogoRow}>
-            <Text style={styles.googleG}>G</Text>
-          </View>
-
-          <Text style={styles.title}>Sign in with Google</Text>
-          <Text style={styles.subtitle}>Choose an account to continue to Club Scentra</Text>
-
-          <View style={styles.accountsCard}>
-            {mockAccounts.map((account, i) => (
-              <TouchableOpacity
-                key={account.email}
-                style={[styles.accountRow, i < mockAccounts.length - 1 && styles.accountRowBorder]}
-                onPress={handleSelectAccount}
-                activeOpacity={0.7}
-              >
-                <Image source={{ uri: account.avatar }} style={styles.avatar} />
-                <View style={styles.accountInfo}>
-                  <Text style={styles.accountName}>{account.name}</Text>
-                  <Text style={styles.accountEmail}>{account.email}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Theme.colors.textSecondary} />
-              </TouchableOpacity>
-            ))}
-
-            <TouchableOpacity style={[styles.accountRow, styles.accountRowBorder]} activeOpacity={0.7}>
-              <View style={styles.addIcon}>
-                <Ionicons name="person-add-outline" size={20} color={Theme.colors.textPrimary} />
-              </View>
-              <View style={styles.accountInfo}>
-                <Text style={styles.accountName}>Use another account</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.disclaimer}>
-            By continuing, Google will share your name, email address, and profile picture with Club Scentra.
-          </Text>
-
-          <View style={styles.privacyRow}>
-            <Text style={styles.privacyLink}>Privacy Policy</Text>
-            <Text style={styles.privacyDot}> · </Text>
-            <Text style={styles.privacyLink}>Terms of Service</Text>
-          </View>
-        </View>
-      )}
-
-      {step === 'loading' && (
+  if (loading) {
+    return (
+      <View style={styles.container}>
         <View style={styles.loadingContent}>
           <View style={styles.logoClip}>
             <Image source={logo} style={styles.logoImage} resizeMode="contain" />
@@ -85,157 +88,72 @@ export default function GoogleAuthScreen() {
           <Text style={styles.loadingText}>Signing you in...</Text>
           <Text style={styles.loadingSubtext}>Connecting your Google account to Club Scentra</Text>
         </View>
-      )}
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <Ionicons name="arrow-back" size={22} color={Theme.colors.textPrimary} />
+      </TouchableOpacity>
+
+      <View style={styles.content}>
+        <View style={styles.googleLogoRow}>
+          <Text style={styles.googleG}>G</Text>
+        </View>
+
+        <Text style={styles.title}>Sign in with Google</Text>
+        <Text style={styles.subtitle}>Continue to Club Scentra with your Google account</Text>
+
+        <TouchableOpacity
+          style={[styles.googleButton, !request && styles.buttonDisabled]}
+          onPress={handlePress}
+          activeOpacity={0.8}
+          disabled={!request && !!GOOGLE_CLIENT_ID}
+        >
+          <Text style={styles.googleButtonText}>Continue with Google</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.emailButton} onPress={() => router.replace('/(auth)/login')} activeOpacity={0.8}>
+          <Text style={styles.emailButtonText}>Use email instead</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.disclaimer}>
+          By continuing, Google will share your name, email address, and profile picture with Club Scentra.
+        </Text>
+
+        <View style={styles.privacyRow}>
+          <Text style={styles.privacyLink}>Privacy Policy</Text>
+          <Text style={styles.privacyDot}> · </Text>
+          <Text style={styles.privacyLink}>Terms of Service</Text>
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  backBtn: {
-    position: 'absolute',
-    top: 54,
-    left: Theme.spacing.md,
-    zIndex: 10,
-    padding: Theme.spacing.sm,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: Theme.spacing.xl,
-    paddingTop: 100,
-    alignItems: 'center',
-  },
-  googleLogoRow: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Theme.colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Theme.spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  googleG: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#4285F4',
-  },
-  title: {
-    fontSize: Theme.fontSize.xl,
-    fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
-    marginBottom: Theme.spacing.xs,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.xl,
-  },
-  accountsCard: {
-    width: '100%',
-    backgroundColor: Theme.colors.white,
-    borderRadius: Theme.borderRadius.lg,
-    overflow: 'hidden',
-    marginBottom: Theme.spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  accountRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Theme.spacing.md,
-  },
-  accountRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    marginRight: Theme.spacing.md,
-  },
-  addIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Theme.colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Theme.spacing.md,
-  },
-  accountInfo: {
-    flex: 1,
-  },
-  accountName: {
-    fontSize: Theme.fontSize.md,
-    fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.textPrimary,
-  },
-  accountEmail: {
-    fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  disclaimer: {
-    fontSize: Theme.fontSize.xs,
-    color: Theme.colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: Theme.spacing.sm,
-  },
-  privacyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  privacyLink: {
-    fontSize: Theme.fontSize.xs,
-    color: '#4285F4',
-  },
-  privacyDot: {
-    fontSize: Theme.fontSize.xs,
-    color: Theme.colors.textSecondary,
-  },
-  loadingContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Theme.spacing.xl,
-  },
-  logoClip: {
-    width: 90,
-    height: 72,
-    overflow: 'hidden',
-    marginBottom: Theme.spacing.xl,
-  },
-  logoImage: {
-    width: 90,
-    height: 90,
-  },
-  spinner: {
-    marginBottom: Theme.spacing.lg,
-  },
-  loadingText: {
-    fontSize: Theme.fontSize.lg,
-    fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
-    marginBottom: Theme.spacing.xs,
-  },
-  loadingSubtext: {
-    fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textSecondary,
-    textAlign: 'center',
-  },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  backBtn: { position: 'absolute', top: 54, left: Theme.spacing.md, zIndex: 10, padding: Theme.spacing.sm },
+  content: { flex: 1, paddingHorizontal: Theme.spacing.xl, paddingTop: 100, alignItems: 'center' },
+  googleLogoRow: { width: 60, height: 60, borderRadius: 30, backgroundColor: Theme.colors.white, alignItems: 'center', justifyContent: 'center', marginBottom: Theme.spacing.lg, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 4 },
+  googleG: { fontSize: 32, fontWeight: '700', color: '#4285F4' },
+  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.xs, textAlign: 'center' },
+  subtitle: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xl },
+  googleButton: { width: '100%', backgroundColor: '#4285F4', borderRadius: Theme.borderRadius.xl, paddingVertical: 16, alignItems: 'center', marginBottom: Theme.spacing.md },
+  buttonDisabled: { opacity: 0.6 },
+  googleButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.white },
+  emailButton: { width: '100%', backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.xl, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: Theme.colors.border, marginBottom: Theme.spacing.xl },
+  emailButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary },
+  disclaimer: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, textAlign: 'center', lineHeight: 18, marginBottom: Theme.spacing.sm },
+  privacyRow: { flexDirection: 'row', alignItems: 'center' },
+  privacyLink: { fontSize: Theme.fontSize.xs, color: '#4285F4' },
+  privacyDot: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary },
+  loadingContent: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Theme.spacing.xl },
+  logoClip: { width: 90, height: 72, overflow: 'hidden', marginBottom: Theme.spacing.xl },
+  logoImage: { width: 90, height: 90 },
+  spinner: { marginBottom: Theme.spacing.lg },
+  loadingText: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.xs },
+  loadingSubtext: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, textAlign: 'center' },
 });
