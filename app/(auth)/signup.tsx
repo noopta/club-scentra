@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
 import InputField from '@/components/InputField';
@@ -10,10 +10,11 @@ const logo = require('@/assets/images/logo.png');
 export default function SignupScreen() {
   const router = useRouter();
   const [emailValue, setEmailValue] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const { signInWithGoogle, googleLoading } = useGoogleAuth(
     () => router.replace('/(tabs)/explore'),
-    (msg) => Alert.alert('Google Sign-In failed', msg)
+    (msg) => setErrorMsg(msg)
   );
 
   return (
@@ -31,10 +32,16 @@ export default function SignupScreen() {
 
         <Text style={styles.title}>Welcome to Club Scentra</Text>
 
+        {errorMsg ? (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{errorMsg}</Text>
+          </View>
+        ) : null}
+
         <TouchableOpacity
           style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
           activeOpacity={0.8}
-          onPress={signInWithGoogle}
+          onPress={() => { setErrorMsg(''); signInWithGoogle(); }}
           disabled={googleLoading}
         >
           {googleLoading ? (
@@ -49,7 +56,7 @@ export default function SignupScreen() {
         <InputField
           label="Email"
           value={emailValue}
-          onChangeText={setEmailValue}
+          onChangeText={(t) => { setErrorMsg(''); setEmailValue(t); }}
           autoCapitalize="none"
           keyboardType="email-address"
         />
@@ -80,7 +87,9 @@ const styles = StyleSheet.create({
   logoContainer: { alignItems: 'center', marginBottom: Theme.spacing.lg },
   logoClip: { width: 90, height: 72, overflow: 'hidden' },
   logoImage: { width: 90, height: 90 },
-  title: { fontSize: Theme.fontSize.xxl, fontWeight: Theme.fontWeight.bold, fontStyle: 'italic', color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xl },
+  title: { fontSize: Theme.fontSize.xxl, fontWeight: Theme.fontWeight.bold, fontStyle: 'italic', color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.lg },
+  errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },
+  errorText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, textAlign: 'center' },
   googleButton: { backgroundColor: Theme.colors.black, borderRadius: Theme.borderRadius.xl, paddingVertical: 16, alignItems: 'center', marginBottom: Theme.spacing.lg },
   buttonDisabled: { opacity: 0.6 },
   googleButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.white },

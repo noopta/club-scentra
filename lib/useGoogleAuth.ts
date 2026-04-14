@@ -74,12 +74,6 @@ export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => 
       onError?.('Google sign-in is not configured.');
       return;
     }
-    if (Platform.OS === 'web') {
-      onError?.(
-        'Google sign-in only works in the iOS or Android app. Please use email and password to log in here.'
-      );
-      return;
-    }
     setLoading(true);
     await promptAsync();
   };
