@@ -174,7 +174,7 @@ export const auth = {
     request<AuthResponse>('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
 
   apple: async (identityToken: string, email: string | null, fullName: string | null): Promise<AuthResponse> => {
-    const res = await fetch('https://api.airthreads.ai:4009/api/auth/apple', {
+    const res = await fetch('https://api.airthreads.ai:4014/api/auth/apple', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identityToken, email, fullName }),
