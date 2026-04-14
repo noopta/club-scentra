@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
 import InputField from '@/components/InputField';
+import { useGoogleAuth } from '@/lib/useGoogleAuth';
 
 const logo = require('@/assets/images/logo.png');
 
 export default function SignupScreen() {
   const router = useRouter();
   const [emailValue, setEmailValue] = useState('');
+
+  const { signInWithGoogle, googleLoading } = useGoogleAuth(
+    () => router.replace('/(tabs)/explore'),
+    (msg) => Alert.alert('Google Sign-In failed', msg)
+  );
 
   return (
     <View style={styles.container}>
@@ -26,11 +32,16 @@ export default function SignupScreen() {
         <Text style={styles.title}>Welcome to Club Scentra</Text>
 
         <TouchableOpacity
-          style={styles.googleButton}
+          style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
           activeOpacity={0.8}
-          onPress={() => router.push('/(auth)/google-auth')}
+          onPress={signInWithGoogle}
+          disabled={googleLoading}
         >
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
+          {googleLoading ? (
+            <ActivityIndicator color={Theme.colors.white} />
+          ) : (
+            <Text style={styles.googleButtonText}>Continue with Google</Text>
+          )}
         </TouchableOpacity>
 
         <Text style={styles.orText}>or</Text>
@@ -45,7 +56,7 @@ export default function SignupScreen() {
 
         <TouchableOpacity
           style={styles.continueButton}
-          onPress={() => router.push('/(auth)/signup-details')}
+          onPress={() => router.push({ pathname: '/(auth)/signup-details', params: { email: emailValue } })}
           activeOpacity={0.8}
         >
           <Text style={styles.continueButtonText}>Continue with email</Text>
@@ -64,78 +75,18 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  scrollContent: {
-    paddingHorizontal: Theme.spacing.xl,
-    paddingTop: 80,
-    paddingBottom: Theme.spacing.xl,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: Theme.spacing.lg,
-  },
-  logoClip: {
-    width: 90,
-    height: 72,
-    overflow: 'hidden',
-  },
-  logoImage: {
-    width: 90,
-    height: 90,
-  },
-  title: {
-    fontSize: Theme.fontSize.xxl,
-    fontWeight: Theme.fontWeight.bold,
-    fontStyle: 'italic',
-    color: Theme.colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.xl,
-  },
-  googleButton: {
-    backgroundColor: Theme.colors.black,
-    borderRadius: Theme.borderRadius.xl,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: Theme.spacing.lg,
-  },
-  googleButtonText: {
-    fontSize: Theme.fontSize.md,
-    fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.white,
-  },
-  orText: {
-    textAlign: 'center',
-    fontSize: Theme.fontSize.md,
-    color: Theme.colors.textSecondary,
-    marginBottom: Theme.spacing.lg,
-  },
-  continueButton: {
-    backgroundColor: Theme.colors.white,
-    borderRadius: Theme.borderRadius.xl,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    marginTop: Theme.spacing.md,
-  },
-  continueButtonText: {
-    fontSize: Theme.fontSize.md,
-    fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.textPrimary,
-  },
-  loginButton: {
-    backgroundColor: Theme.colors.black,
-    borderRadius: Theme.borderRadius.xl,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: Theme.spacing.md,
-  },
-  loginButtonText: {
-    fontSize: Theme.fontSize.md,
-    fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.white,
-  },
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: 80, paddingBottom: Theme.spacing.xl },
+  logoContainer: { alignItems: 'center', marginBottom: Theme.spacing.lg },
+  logoClip: { width: 90, height: 72, overflow: 'hidden' },
+  logoImage: { width: 90, height: 90 },
+  title: { fontSize: Theme.fontSize.xxl, fontWeight: Theme.fontWeight.bold, fontStyle: 'italic', color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xl },
+  googleButton: { backgroundColor: Theme.colors.black, borderRadius: Theme.borderRadius.xl, paddingVertical: 16, alignItems: 'center', marginBottom: Theme.spacing.lg },
+  buttonDisabled: { opacity: 0.6 },
+  googleButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.white },
+  orText: { textAlign: 'center', fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, marginBottom: Theme.spacing.lg },
+  continueButton: { backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.xl, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: Theme.colors.border, marginTop: Theme.spacing.md },
+  continueButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary },
+  loginButton: { backgroundColor: Theme.colors.black, borderRadius: Theme.borderRadius.xl, paddingVertical: 16, alignItems: 'center', marginTop: Theme.spacing.md },
+  loginButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.white },
 });
