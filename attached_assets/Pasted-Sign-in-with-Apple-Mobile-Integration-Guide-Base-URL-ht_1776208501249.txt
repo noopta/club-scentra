@@ -1,0 +1,113 @@
+Sign in with Apple — Mobile Integration Guide
+Base URL: https://api.airthreads.ai:4009
+
+Overview
+The flow is entirely token-based — the mobile app handles the native Apple auth UI, then sends the resulting token to the backend. The backend verifies it against Apple's servers and returns a Scentra session.
+
+
+App → Apple SDK → identityToken
+App → POST /api/auth/apple → { accessToken, refreshToken, user }
+Endpoint
+
+POST /api/auth/apple
+Content-Type: application/json
+Request body
+
+{
+  "identityToken": "<JWT string from Apple credential>",
+  "email": "jane@icloud.com",
+  "fullName": "Jane Doe"
+}
+Field	Type	Required	Notes
+identityToken	string	Always	credential.identityToken from Apple's SDK
+email	string | null	First sign-in only	Apple only provides this once. Pass null on repeat logins.
+fullName	string | null	Optional	Apple only provides this once. Pass null on repeat logins.
+Critical: Apple only delivers email and fullName on the very first authorization. On every subsequent sign-in those fields come back null from the SDK. The app must pass whatever it received — the backend handles the null case for returning users.
+
+Success response — 200 OK
+
+{
+  "accessToken": "eyJhbGci...",
+  "refreshToken": "eyJhbGci...",
+  "expiresIn": "15m",
+  "user": {
+    "id": "clxyz123",
+    "username": "janedoe",
+    "email": "jane@icloud.com",
+    "displayName": "Jane Doe",
+    "avatarUrl": null,
+    "bio": null,
+    "createdAt": "2026-04-14T12:00:00.000Z",
+    "settings": {
+      "pushNotifications": true,
+      "emailNotifications": false,
+      "darkMode": false,
+      "locationServices": true
+    }
+  }
+}
+Store accessToken and refreshToken securely (e.g. expo-secure-store). All subsequent API calls need:
+
+
+Authorization: Bearer <accessToken>
+Error responses
+Status	error message	What happened
+400	"Email is required for first-time Apple Sign-In"	New user but email was null — shouldn't happen on first auth
+400	"Apple token missing sub claim"	Malformed token
+401	"Invalid or expired Apple identity token"	Token failed verification (expired, wrong audience, tampered)
+401	"Malformed Apple identity token"	Token string is not a valid JWT
+503	"Apple Sign-In is not configured"	Backend env var not set — contact backend team
+Account linking behavior
+The backend handles all three scenarios automatically — the app doesn't need to do anything special:
+
+New user — account created, username auto-generated from email prefix
+Returning user (same Apple ID) — signed in directly
+Existing email account (user previously signed up with email/password) — Apple ID gets silently linked to that account
+Expo / React Native example
+Using expo-apple-authentication:
+
+
+import * as AppleAuthentication from 'expo-apple-authentication';
+
+async function signInWithApple() {
+  const credential = await AppleAuthentication.signInAsync({
+    requestedScopes: [
+      AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      AppleAuthentication.AppleAuthenticationScope.EMAIL,
+    ],
+  });
+
+  // Apple only sends fullName/email on first sign-in — pass whatever we got
+  const fullName = credential.fullName
+    ? [credential.fullName.givenName, credential.fullName.familyName]
+        .filter(Boolean)
+        .join(' ') || null
+    : null;
+
+  const res = await fetch('https://api.airthreads.ai:4009/api/auth/apple', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      identityToken: credential.identityToken,
+      email: credential.email ?? null,
+      fullName,
+    }),
+  });
+
+  if (!res.ok) {
+    const { error } = await res.json();
+    throw new Error(error);
+  }
+
+  const { accessToken, refreshToken, user } = await res.json();
+  // Store tokens securely and update auth state
+}
+What the backend team needs to configure
+Before this goes live the backend .env needs:
+
+
+APPLE_CLIENT_ID=com.scentra.app   # must match the iOS bundle ID exactly
+And the Prisma migration needs to be applied to production:
+
+
+npx prisma migrate dev --name add-apple-id

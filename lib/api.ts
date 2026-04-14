@@ -172,6 +172,19 @@ export const auth = {
 
   google: (idToken: string) =>
     request<AuthResponse>('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
+
+  apple: async (identityToken: string, email: string | null, fullName: string | null): Promise<AuthResponse> => {
+    const res = await fetch('https://api.airthreads.ai:4009/api/auth/apple', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identityToken, email, fullName }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || `Apple sign-in failed (${res.status})`);
+    }
+    return res.json();
+  },
 };
 
 export const users = {

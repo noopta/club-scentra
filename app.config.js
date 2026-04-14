@@ -18,6 +18,9 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.clubscentra.app',
+      entitlements: {
+        'com.apple.developer.applesignin': ['Default'],
+      },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         CFBundleURLTypes: [
@@ -55,6 +58,7 @@ module.exports = {
     },
     plugins: [
       'expo-router',
+      'expo-apple-authentication',
       [
         'expo-image-picker',
         {

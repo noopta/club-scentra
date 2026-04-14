@@ -7,6 +7,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   login: (identifier: string, password: string) => Promise<void>;
   googleLogin: (idToken: string) => Promise<void>;
+  appleLogin: (identityToken: string, email: string | null, fullName: string | null) => Promise<void>;
   register: (data: { username: string; email: string; password: string; displayName?: string }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -43,7 +44,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const googleLogin = async (idToken: string) => {
     const res = await auth.google(idToken);
     await saveTokens(res.accessToken, res.refreshToken);
-    // res.user may not exist on google response — fall back to fetching profile
+    if (res.user) {
+      setUser(res.user);
+    } else {
+      const me = await users.me();
+      setUser(me);
+    }
+  };
+
+  const appleLogin = async (identityToken: string, email: string | null, fullName: string | null) => {
+    const res = await auth.apple(identityToken, email, fullName);
+    await saveTokens(res.accessToken, res.refreshToken);
     if (res.user) {
       setUser(res.user);
     } else {
@@ -77,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!user,
       login,
       googleLogin,
+      appleLogin,
       register,
       logout,
       refreshUser,
