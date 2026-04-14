@@ -3,19 +3,22 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIn
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
 import InputField from '@/components/InputField';
+import { useAuth } from '@/lib/AuthContext';
 import { useGoogleAuth } from '@/lib/useGoogleAuth';
 
 const logo = require('@/assets/images/logo.png');
 
 export default function SignupScreen() {
   const router = useRouter();
+  const { googleLogin } = useAuth();
   const [emailValue, setEmailValue] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const { signInWithGoogle, googleLoading } = useGoogleAuth(
-    () => router.replace('/(tabs)/explore'),
-    (msg) => setErrorMsg(msg)
-  );
+  const { signInWithGoogle, googleLoading } = useGoogleAuth({
+    googleLogin,
+    onSuccess: () => router.replace('/(tabs)/explore'),
+    onError: (msg) => setErrorMsg(msg),
+  });
 
   return (
     <View style={styles.container}>

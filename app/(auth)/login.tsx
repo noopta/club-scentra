@@ -1,25 +1,27 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
 import InputField from '@/components/InputField';
 import { useAuth } from '@/lib/AuthContext';
 import { useGoogleAuth } from '@/lib/useGoogleAuth';
 
+
 const logo = require('@/assets/images/logo.png');
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const { signInWithGoogle, googleLoading } = useGoogleAuth(
-    () => router.replace('/(tabs)/explore'),
-    (msg) => setErrorMsg(msg)
-  );
+  const { signInWithGoogle, googleLoading } = useGoogleAuth({
+    googleLogin,
+    onSuccess: () => router.replace('/(tabs)/explore'),
+    onError: (msg) => setErrorMsg(msg),
+  });
 
   const handleLogin = async () => {
     setErrorMsg('');

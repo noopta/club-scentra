@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
-import { saveTokens, auth } from './api';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -18,7 +17,13 @@ const GOOGLE_DISCOVERY = {
   revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
 };
 
-export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => void) {
+type Params = {
+  googleLogin: (idToken: string) => Promise<void>;
+  onSuccess: () => void;
+  onError?: (msg: string) => void;
+};
+
+export function useGoogleAuth({ googleLogin, onSuccess, onError }: Params) {
   const [loading, setLoading] = useState(false);
 
   const nativeRedirectUri = REVERSED_CLIENT_ID
@@ -44,7 +49,7 @@ export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => 
 
     if (response.type === 'success') {
       const { code } = response.params;
-      exchangeCodeForToken(code);
+      handleCodeExchange(code);
     } else if (response.type === 'error') {
       onError?.(response.error?.message ?? 'Google sign-in failed');
       setLoading(false);
@@ -53,7 +58,7 @@ export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => 
     }
   }, [response]);
 
-  const exchangeCodeForToken = async (code: string) => {
+  const handleCodeExchange = async (code: string) => {
     try {
       if (!request?.codeVerifier) throw new Error('Missing PKCE code verifier');
 
@@ -67,16 +72,13 @@ export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => 
         GOOGLE_DISCOVERY
       );
 
-      const accessToken = tokenResult.accessToken;
+      // Prefer idToken (JWT) — that's what the backend verifies.
+      // Fall back to accessToken if idToken is absent.
+      const tokenToSend = tokenResult.idToken ?? tokenResult.accessToken;
+      if (!tokenToSend) throw new Error('No token received from Google');
 
-      const userInfoRes = await fetch('https://www.googleapis.com/userinfo/v2/me', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!userInfoRes.ok) throw new Error('Failed to fetch Google profile');
-      const userInfo = await userInfoRes.json();
-
-      const result = await auth.google(userInfo.id);
-      await saveTokens(result.accessToken, result.refreshToken);
+      // googleLogin saves tokens + sets user in AuthContext
+      await googleLogin(tokenToSend);
       onSuccess();
     } catch (err: unknown) {
       onError?.(err instanceof Error ? err.message : 'Could not complete sign-in');

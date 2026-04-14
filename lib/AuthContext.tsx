@@ -6,6 +6,7 @@ type AuthContextType = {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (identifier: string, password: string) => Promise<void>;
+  googleLogin: (idToken: string) => Promise<void>;
   register: (data: { username: string; email: string; password: string; displayName?: string }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -39,6 +40,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(res.user);
   };
 
+  const googleLogin = async (idToken: string) => {
+    const res = await auth.google(idToken);
+    await saveTokens(res.accessToken, res.refreshToken);
+    // res.user may not exist on google response — fall back to fetching profile
+    if (res.user) {
+      setUser(res.user);
+    } else {
+      const me = await users.me();
+      setUser(me);
+    }
+  };
+
   const register = async (data: { username: string; email: string; password: string; displayName?: string }) => {
     const res = await auth.register(data);
     await saveTokens(res.accessToken, res.refreshToken);
@@ -63,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: !!user,
       login,
+      googleLogin,
       register,
       logout,
       refreshUser,
