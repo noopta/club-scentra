@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { saveTokens, auth } from './api';
@@ -12,16 +13,28 @@ const discovery = {
   tokenEndpoint: 'https://oauth2.googleapis.com/token',
 };
 
+function buildRedirectUri(): string {
+  if (Platform.OS === 'web') {
+    return AuthSession.makeRedirectUri();
+  }
+  return AuthSession.makeRedirectUri({
+    scheme: 'com.clubscentra.app',
+    path: 'redirect',
+  });
+}
+
+export const GOOGLE_REDIRECT_URI = buildRedirectUri();
+
 export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => void) {
   const [loading, setLoading] = useState(false);
 
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'clubscentra' });
+  console.log('[GoogleAuth] redirect_uri =', GOOGLE_REDIRECT_URI);
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: GOOGLE_CLIENT_ID || 'placeholder',
       scopes: ['openid', 'profile', 'email'],
-      redirectUri,
+      redirectUri: GOOGLE_REDIRECT_URI,
       responseType: AuthSession.ResponseType.Token,
       usePKCE: false,
     },
@@ -63,9 +76,10 @@ export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => 
       onError?.('Google sign-in is not configured. Please use email/password.');
       return;
     }
+    console.log('[GoogleAuth] Starting with redirect_uri =', GOOGLE_REDIRECT_URI);
     setLoading(true);
     await promptAsync();
   };
 
-  return { signInWithGoogle, googleLoading: loading, googleReady: !!request };
+  return { signInWithGoogle, googleLoading: loading, googleReady: !!request, redirectUri: GOOGLE_REDIRECT_URI };
 }
