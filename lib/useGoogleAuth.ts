@@ -26,7 +26,6 @@ export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => 
     : 'clubscentra://redirect';
 
   const webRedirectUri = AuthSession.makeRedirectUri();
-
   const redirectUri = Platform.OS === 'web' ? webRedirectUri : nativeRedirectUri;
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
@@ -34,16 +33,18 @@ export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => 
       clientId: RAW_CLIENT_ID || 'placeholder',
       scopes: ['openid', 'profile', 'email'],
       redirectUri,
-      responseType: AuthSession.ResponseType.Token,
-      usePKCE: false,
+      responseType: AuthSession.ResponseType.Code,
+      usePKCE: true,
     },
     GOOGLE_DISCOVERY
   );
 
   useEffect(() => {
     if (!response) return;
+
     if (response.type === 'success') {
-      handleToken(response.params.access_token);
+      const { code } = response.params;
+      exchangeCodeForToken(code);
     } else if (response.type === 'error') {
       onError?.(response.error?.message ?? 'Google sign-in failed');
       setLoading(false);
@@ -52,13 +53,28 @@ export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => 
     }
   }, [response]);
 
-  const handleToken = async (accessToken: string) => {
+  const exchangeCodeForToken = async (code: string) => {
     try {
+      if (!request?.codeVerifier) throw new Error('Missing PKCE code verifier');
+
+      const tokenResult = await AuthSession.exchangeCodeAsync(
+        {
+          clientId: RAW_CLIENT_ID,
+          code,
+          redirectUri,
+          extraParams: { code_verifier: request.codeVerifier },
+        },
+        GOOGLE_DISCOVERY
+      );
+
+      const accessToken = tokenResult.accessToken;
+
       const userInfoRes = await fetch('https://www.googleapis.com/userinfo/v2/me', {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (!userInfoRes.ok) throw new Error('Failed to fetch Google profile');
       const userInfo = await userInfoRes.json();
+
       const result = await auth.google(userInfo.id);
       await saveTokens(result.accessToken, result.refreshToken);
       onSuccess();
