@@ -6,50 +6,48 @@ import { saveTokens, auth } from './api';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+const RAW_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '';
+const CLIENT_ID_PREFIX = RAW_CLIENT_ID.replace('.apps.googleusercontent.com', '');
+const REVERSED_CLIENT_ID = CLIENT_ID_PREFIX
+  ? `com.googleusercontent.apps.${CLIENT_ID_PREFIX}`
+  : '';
 
-const discovery = {
+const GOOGLE_DISCOVERY = {
   authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
   tokenEndpoint: 'https://oauth2.googleapis.com/token',
+  revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
 };
-
-function buildRedirectUri(): string {
-  if (Platform.OS === 'web') {
-    return AuthSession.makeRedirectUri();
-  }
-  return AuthSession.makeRedirectUri({
-    scheme: 'com.clubscentra.app',
-    path: 'redirect',
-  });
-}
-
-export const GOOGLE_REDIRECT_URI = buildRedirectUri();
 
 export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => void) {
   const [loading, setLoading] = useState(false);
 
-  console.log('[GoogleAuth] redirect_uri =', GOOGLE_REDIRECT_URI);
+  const nativeRedirectUri = REVERSED_CLIENT_ID
+    ? `${REVERSED_CLIENT_ID}:/oauth2redirect/google`
+    : 'clubscentra://redirect';
+
+  const webRedirectUri = AuthSession.makeRedirectUri();
+
+  const redirectUri = Platform.OS === 'web' ? webRedirectUri : nativeRedirectUri;
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
-      clientId: GOOGLE_CLIENT_ID || 'placeholder',
+      clientId: RAW_CLIENT_ID || 'placeholder',
       scopes: ['openid', 'profile', 'email'],
-      redirectUri: GOOGLE_REDIRECT_URI,
+      redirectUri,
       responseType: AuthSession.ResponseType.Token,
       usePKCE: false,
     },
-    discovery
+    GOOGLE_DISCOVERY
   );
 
   useEffect(() => {
-    if (response?.type === 'success') {
-      const { access_token } = response.params;
-      handleToken(access_token);
-    } else if (response?.type === 'error') {
-      const msg = response.error?.message ?? 'Google sign-in failed';
-      onError?.(msg);
+    if (!response) return;
+    if (response.type === 'success') {
+      handleToken(response.params.access_token);
+    } else if (response.type === 'error') {
+      onError?.(response.error?.message ?? 'Google sign-in failed');
       setLoading(false);
-    } else if (response?.type === 'cancel' || response?.type === 'dismiss') {
+    } else if (response.type === 'cancel' || response.type === 'dismiss') {
       setLoading(false);
     }
   }, [response]);
@@ -59,27 +57,32 @@ export function useGoogleAuth(onSuccess: () => void, onError?: (msg: string) => 
       const userInfoRes = await fetch('https://www.googleapis.com/userinfo/v2/me', {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+      if (!userInfoRes.ok) throw new Error('Failed to fetch Google profile');
       const userInfo = await userInfoRes.json();
       const result = await auth.google(userInfo.id);
       await saveTokens(result.accessToken, result.refreshToken);
       onSuccess();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Could not complete sign-in';
-      onError?.(msg);
+      onError?.(err instanceof Error ? err.message : 'Could not complete sign-in');
     } finally {
       setLoading(false);
     }
   };
 
   const signInWithGoogle = async () => {
-    if (!GOOGLE_CLIENT_ID) {
-      onError?.('Google sign-in is not configured. Please use email/password.');
+    if (!RAW_CLIENT_ID) {
+      onError?.('Google sign-in is not configured.');
       return;
     }
-    console.log('[GoogleAuth] Starting with redirect_uri =', GOOGLE_REDIRECT_URI);
+    if (Platform.OS === 'web') {
+      onError?.(
+        'Google sign-in only works in the iOS or Android app. Please use email and password to log in here.'
+      );
+      return;
+    }
     setLoading(true);
     await promptAsync();
   };
 
-  return { signInWithGoogle, googleLoading: loading, googleReady: !!request, redirectUri: GOOGLE_REDIRECT_URI };
+  return { signInWithGoogle, googleLoading: loading, googleReady: !!request };
 }
