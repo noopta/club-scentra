@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
@@ -7,49 +7,80 @@ import StepIndicator from '@/components/StepIndicator';
 import InputField from '@/components/InputField';
 import RedButton from '@/components/RedButton';
 
-const MOCK_ADDRESSES = [
-  { address: '123 Queen St W', city: 'Toronto', province: 'ON', postal: 'M5H 2M9' },
-  { address: '456 King St E', city: 'Toronto', province: 'ON', postal: 'M5A 1L1' },
-  { address: '789 Yonge St', city: 'Toronto', province: 'ON', postal: 'M4W 2G8' },
-  { address: '100 City Centre Dr', city: 'Mississauga', province: 'ON', postal: 'L5B 2C9' },
-  { address: '300 Borough Dr', city: 'Scarborough', province: 'ON', postal: 'M1P 4P5' },
-  { address: '2 Civic Centre Ct', city: 'Brampton', province: 'ON', postal: 'L6W 4V3' },
-  { address: '55 Front St W', city: 'Toronto', province: 'ON', postal: 'M5J 1E6' },
-  { address: '4141 Dixie Rd', city: 'Mississauga', province: 'ON', postal: 'L4W 1V5' },
-  { address: '150 Eglinton Ave E', city: 'Toronto', province: 'ON', postal: 'M4P 1E8' },
-  { address: '7777 Weston Rd', city: 'Vaughan', province: 'ON', postal: 'L4L 9J6' },
-];
+type Suggestion = {
+  display: string;
+  address: string;
+  city: string;
+  region: string;
+  postalCode: string;
+};
+
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 export default function CreateEventLocationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ title: string; description: string }>();
 
-  const [searchAddress, setSearchAddress] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
-  const [province, setProvince] = useState('');
+  const [region, setRegion] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [additionalInfo, setAdditionalInfo] = useState('');
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const suggestions = searchAddress.length >= 2
-    ? MOCK_ADDRESSES.filter(a =>
-        `${a.address} ${a.city}`.toLowerCase().includes(searchAddress.toLowerCase())
-      ).slice(0, 5)
-    : [];
+  const fetchSuggestions = useCallback(async (q: string) => {
+    if (q.length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
+    setSearching(true);
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'ClubScentra/1.0' } });
+      const data = await res.json();
+      const mapped: Suggestion[] = data.map((item: Record<string, unknown>) => {
+        const a = (item.address ?? {}) as Record<string, string>;
+        const road = a.road ?? a.pedestrian ?? a.path ?? '';
+        const houseNumber = a.house_number ?? '';
+        const streetLine = [houseNumber, road].filter(Boolean).join(' ');
+        return {
+          display: String(item.display_name ?? ''),
+          address: streetLine || String(item.display_name ?? '').split(',')[0],
+          city: a.city ?? a.town ?? a.village ?? a.municipality ?? '',
+          region: a.state ?? a.province ?? '',
+          postalCode: a.postcode ?? '',
+        };
+      });
+      setSuggestions(mapped);
+      setShowSuggestions(mapped.length > 0);
+    } catch {
+      setSuggestions([]);
+    } finally {
+      setSearching(false);
+    }
+  }, []);
 
-  const handleSelectAddress = (item: typeof MOCK_ADDRESSES[0]) => {
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text);
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => fetchSuggestions(text), 400);
+  };
+
+  const handleSelect = (item: Suggestion) => {
     setAddress(item.address);
     setCity(item.city);
-    setProvince(item.province);
-    setPostalCode(item.postal);
-    setSearchAddress(`${item.address}, ${item.city}`);
+    setRegion(item.region);
+    setPostalCode(item.postalCode);
+    setSearchQuery(item.address ? `${item.address}${item.city ? ', ' + item.city : ''}` : item.display.split(',').slice(0, 2).join(','));
     setShowSuggestions(false);
+    setSuggestions([]);
   };
 
   const handleNext = () => {
+    setErrorMsg('');
     if (!address.trim() || !city.trim()) {
-      Alert.alert('Required', 'Please enter an address and city.');
+      setErrorMsg('Please enter an address and city.');
       return;
     }
     router.push({
@@ -59,7 +90,7 @@ export default function CreateEventLocationScreen() {
         description: params.description,
         addressLine: address.trim(),
         city: city.trim(),
-        region: province.trim(),
+        region: region.trim(),
         postalCode: postalCode.trim(),
         additionalInfo: additionalInfo.trim(),
       },
@@ -74,35 +105,45 @@ export default function CreateEventLocationScreen() {
         <Text style={styles.title}>Location</Text>
         <Text style={styles.subtitle}>Add an address</Text>
 
+        {errorMsg ? <View style={styles.errorBanner}><Text style={styles.errorText}>{errorMsg}</Text></View> : null}
+
         <View style={styles.searchWrapper}>
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={18} color={Theme.colors.textMuted} style={styles.searchIconLeft} />
+          <Text style={styles.inputLabel}>Search Address</Text>
+          <View style={styles.searchRow}>
+            <Ionicons name="search" size={18} color={Theme.colors.textMuted} style={styles.searchIcon} />
             <InputField
-              label="Search Address"
-              value={searchAddress}
-              onChangeText={(text) => { setSearchAddress(text); setShowSuggestions(true); }}
-              onFocus={() => setShowSuggestions(true)}
+              label=""
+              value={searchQuery}
+              onChangeText={handleSearchChange}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
               style={styles.searchInput}
+              placeholder="Start typing an address..."
+              autoCapitalize="words"
             />
-            {searchAddress.length > 0 && (
-              <TouchableOpacity style={styles.clearSearch} onPress={() => { setSearchAddress(''); setShowSuggestions(false); }}>
+            {searching && <ActivityIndicator size="small" color={Theme.colors.primary} style={styles.searchSpinner} />}
+            {searchQuery.length > 0 && !searching && (
+              <TouchableOpacity style={styles.clearBtn} onPress={() => { setSearchQuery(''); setSuggestions([]); setShowSuggestions(false); }}>
                 <Ionicons name="close-circle" size={18} color={Theme.colors.textMuted} />
               </TouchableOpacity>
             )}
           </View>
           {showSuggestions && suggestions.length > 0 && (
-            <View style={styles.suggestionsContainer}>
-              {suggestions.map((item, index) => (
+            <View style={styles.suggestionsBox}>
+              {suggestions.map((item, i) => (
                 <TouchableOpacity
-                  key={index}
-                  style={[styles.suggestionItem, index < suggestions.length - 1 && styles.suggestionBorder]}
-                  onPress={() => handleSelectAddress(item)}
+                  key={i}
+                  style={[styles.suggestion, i < suggestions.length - 1 && styles.suggestionBorder]}
+                  onPress={() => handleSelect(item)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="location-outline" size={16} color={Theme.colors.primary} style={{ marginRight: 10 }} />
+                  <Ionicons name="location-outline" size={16} color={Theme.colors.primary} style={{ marginRight: 10, marginTop: 2 }} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.suggestionAddress}>{item.address}</Text>
-                    <Text style={styles.suggestionCity}>{item.city}, {item.province} {item.postal}</Text>
+                    <Text style={styles.suggestionMain} numberOfLines={1}>
+                      {item.address || item.display.split(',')[0]}
+                    </Text>
+                    <Text style={styles.suggestionSub} numberOfLines={1}>
+                      {[item.city, item.region, item.postalCode].filter(Boolean).join(', ')}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -112,7 +153,7 @@ export default function CreateEventLocationScreen() {
 
         <InputField label="Address" required value={address} onChangeText={setAddress} />
         <InputField label="City" required value={city} onChangeText={setCity} />
-        <InputField label="Province/State" value={province} onChangeText={setProvince} />
+        <InputField label="Province / State" value={region} onChangeText={setRegion} />
         <InputField label="Postal Code / Zip" value={postalCode} onChangeText={setPostalCode} />
         <InputField label="Additional Info" value={additionalInfo} onChangeText={setAdditionalInfo} multiline />
 
@@ -124,17 +165,26 @@ export default function CreateEventLocationScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Theme.colors.background },
-  scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.xxl, paddingBottom: Theme.spacing.xxl },
+  scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.xxl, paddingBottom: Theme.spacing.xxl, gap: Theme.spacing.sm },
   title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xs },
-  subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xxl },
-  searchWrapper: { zIndex: 10, marginBottom: Theme.spacing.sm },
-  searchContainer: { position: 'relative' },
-  searchIconLeft: { position: 'absolute', left: 12, top: 38, zIndex: 1 },
-  searchInput: { paddingLeft: 36 },
-  clearSearch: { position: 'absolute', right: 12, top: 38, zIndex: 1 },
-  suggestionsContainer: { backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: Theme.colors.border, overflow: 'hidden', marginTop: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
-  suggestionItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Theme.spacing.md, paddingVertical: 12 },
+  subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.md },
+  errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md },
+  errorText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, textAlign: 'center' },
+  searchWrapper: { zIndex: 10, marginBottom: Theme.spacing.xs },
+  inputLabel: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary, marginBottom: 6 },
+  searchRow: { position: 'relative', flexDirection: 'row', alignItems: 'center' },
+  searchIcon: { position: 'absolute', left: 12, top: '50%', zIndex: 2, marginTop: -9 },
+  searchInput: { flex: 1, paddingLeft: 36 },
+  searchSpinner: { position: 'absolute', right: 12, top: '50%', marginTop: -10 },
+  clearBtn: { position: 'absolute', right: 12, top: '50%', marginTop: -9, zIndex: 2 },
+  suggestionsBox: {
+    backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.md,
+    borderWidth: 1, borderColor: Theme.colors.border, overflow: 'hidden',
+    marginTop: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1, shadowRadius: 8, elevation: 5,
+  },
+  suggestion: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: Theme.spacing.md, paddingVertical: 12 },
   suggestionBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.border },
-  suggestionAddress: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary },
-  suggestionCity: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, marginTop: 2 },
+  suggestionMain: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary },
+  suggestionSub: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, marginTop: 2 },
 });

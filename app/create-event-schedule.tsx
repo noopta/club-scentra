@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import StepIndicator from '@/components/StepIndicator';
-import InputField from '@/components/InputField';
 import RedButton from '@/components/RedButton';
+import TimePicker from '@/components/TimePicker';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -13,14 +13,14 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 function getDaysInMonth(year: number, month: number) { return new Date(year, month + 1, 0).getDate(); }
 function getFirstDayOfMonth(year: number, month: number) { return new Date(year, month, 1).getDay(); }
 
-function parseTimeToDate(dateStr: string, timeStr: string): string | null {
+function timeStringToISO(dateStr: string, timeStr: string): string | null {
   try {
     const base = new Date(dateStr);
-    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (!match) return null;
     let hours = parseInt(match[1]);
     const minutes = parseInt(match[2]);
-    const ampm = match[3]?.toUpperCase();
+    const ampm = match[3].toUpperCase();
     if (ampm === 'PM' && hours !== 12) hours += 12;
     if (ampm === 'AM' && hours === 12) hours = 0;
     base.setHours(hours, minutes, 0, 0);
@@ -37,9 +37,12 @@ export default function CreateEventScheduleScreen() {
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dateLabel, setDateLabel] = useState('');
-  const [startTime, setStartTime] = useState('');
+  const [startTime, setStartTime] = useState('12:00 PM');
   const [endTime, setEndTime] = useState('');
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [startPickerOpen, setStartPickerOpen] = useState(false);
+  const [endPickerOpen, setEndPickerOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
@@ -64,22 +67,18 @@ export default function CreateEventScheduleScreen() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   const handleNext = () => {
-    if (!selectedDate) { Alert.alert('Required', 'Please select a date.'); return; }
-    if (!startTime.trim()) { Alert.alert('Required', 'Please enter a start time.'); return; }
+    setErrorMsg('');
+    if (!selectedDate) { setErrorMsg('Please select a date.'); return; }
+    if (!startTime) { setErrorMsg('Please select a start time.'); return; }
 
-    const startAt = parseTimeToDate(selectedDate.toISOString(), startTime);
-    if (!startAt) { Alert.alert('Invalid time', 'Please enter time like "3:00 PM"'); return; }
+    const startAt = timeStringToISO(selectedDate.toISOString(), startTime);
+    if (!startAt) { setErrorMsg('Invalid start time.'); return; }
 
-    const endAt = endTime.trim() ? parseTimeToDate(selectedDate.toISOString(), endTime) : null;
+    const endAt = endTime ? timeStringToISO(selectedDate.toISOString(), endTime) : null;
 
     router.push({
       pathname: '/create-event-photo',
-      params: {
-        ...params,
-        startAt,
-        endAt: endAt ?? '',
-        dateLabel,
-      },
+      params: { ...params, startAt, endAt: endAt ?? '', dateLabel },
     });
   };
 
@@ -91,20 +90,41 @@ export default function CreateEventScheduleScreen() {
         <Text style={styles.title}>Schedule</Text>
         <Text style={styles.subtitle}>Add a date and time</Text>
 
+        {errorMsg ? <View style={styles.errorBanner}><Text style={styles.errorText}>{errorMsg}</Text></View> : null}
+
         <View style={styles.formContainer}>
           <View>
             <Text style={styles.inputLabel}>Date *</Text>
-            <TouchableOpacity style={styles.datePickerButton} onPress={() => setCalendarVisible(true)} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.pickerButton} onPress={() => setCalendarVisible(true)} activeOpacity={0.8}>
               <Ionicons name="calendar-outline" size={18} color={Theme.colors.primary} />
-              <Text style={[styles.datePickerText, !dateLabel && styles.datePickerPlaceholder]}>
+              <Text style={[styles.pickerText, !dateLabel && styles.pickerPlaceholder]}>
                 {dateLabel || 'Select a date'}
               </Text>
               <Ionicons name="chevron-down" size={18} color={Theme.colors.textMuted} />
             </TouchableOpacity>
           </View>
 
-          <InputField label="Start Time *" value={startTime} onChangeText={setStartTime} placeholder="e.g. 3:00 PM" />
-          <InputField label="End Time" value={endTime} onChangeText={setEndTime} placeholder="e.g. 8:00 PM" />
+          <View>
+            <Text style={styles.inputLabel}>Start Time *</Text>
+            <TouchableOpacity style={styles.pickerButton} onPress={() => setStartPickerOpen(true)} activeOpacity={0.8}>
+              <Ionicons name="time-outline" size={18} color={Theme.colors.primary} />
+              <Text style={[styles.pickerText, !startTime && styles.pickerPlaceholder]}>
+                {startTime || 'Select start time'}
+              </Text>
+              <Ionicons name="chevron-down" size={18} color={Theme.colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+
+          <View>
+            <Text style={styles.inputLabel}>End Time</Text>
+            <TouchableOpacity style={styles.pickerButton} onPress={() => setEndPickerOpen(true)} activeOpacity={0.8}>
+              <Ionicons name="time-outline" size={18} color={Theme.colors.primary} />
+              <Text style={[styles.pickerText, !endTime && styles.pickerPlaceholder]}>
+                {endTime || 'Select end time (optional)'}
+              </Text>
+              <Ionicons name="chevron-down" size={18} color={Theme.colors.textMuted} />
+            </TouchableOpacity>
+          </View>
 
           <RedButton title="Next: Add a Picture" onPress={handleNext} />
         </View>
@@ -152,6 +172,20 @@ export default function CreateEventScheduleScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      <TimePicker
+        visible={startPickerOpen}
+        value={startTime}
+        onConfirm={setStartTime}
+        onClose={() => setStartPickerOpen(false)}
+      />
+
+      <TimePicker
+        visible={endPickerOpen}
+        value={endTime || '12:00 PM'}
+        onConfirm={setEndTime}
+        onClose={() => setEndPickerOpen(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -160,12 +194,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Theme.colors.background },
   scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.xxl, paddingBottom: Theme.spacing.xxl },
   title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xs },
-  subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xxl },
+  subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.lg },
+  errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },
+  errorText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, textAlign: 'center' },
   formContainer: { gap: Theme.spacing.md },
   inputLabel: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary, marginBottom: 6 },
-  datePickerButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: Theme.colors.border, paddingHorizontal: Theme.spacing.md, paddingVertical: 14, gap: 10 },
-  datePickerText: { flex: 1, fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary, fontWeight: Theme.fontWeight.medium },
-  datePickerPlaceholder: { color: Theme.colors.textMuted, fontWeight: '400' },
+  pickerButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: Theme.colors.border, paddingHorizontal: Theme.spacing.md, paddingVertical: 14, gap: 10 },
+  pickerText: { flex: 1, fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary, fontWeight: Theme.fontWeight.medium },
+  pickerPlaceholder: { color: Theme.colors.textMuted, fontWeight: '400' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   calendarSheet: { backgroundColor: Theme.colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40 },
   handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Theme.colors.border, alignSelf: 'center', marginBottom: Theme.spacing.md },

@@ -303,10 +303,18 @@ export const uploads = {
   uploadImage: async (uri: string): Promise<{ url: string; key: string }> => {
     const token = await getAccessToken();
     const formData = new FormData();
-    const filename = uri.split('/').pop() ?? 'photo.jpg';
+    const filename = uri.split('/').pop()?.split('?')[0] ?? 'photo.jpg';
     const match = /\.(\w+)$/.exec(filename);
-    const type = match ? `image/${match[1]}` : 'image/jpeg';
-    formData.append('file', { uri, name: filename, type } as unknown as Blob);
+    const type = match ? `image/${match[1].toLowerCase().replace('jpg', 'jpeg')}` : 'image/jpeg';
+
+    // On web, ImagePicker returns a blob: or data: URI — fetch it into a real Blob.
+    // On native, append the { uri } object which React Native's fetch understands.
+    if (uri.startsWith('blob:') || uri.startsWith('data:')) {
+      const blob = await fetch(uri).then(r => r.blob());
+      formData.append('file', blob, filename);
+    } else {
+      formData.append('file', { uri, name: filename, type } as unknown as Blob);
+    }
 
     const res = await fetch(`${BASE_URL}/uploads`, {
       method: 'POST',
