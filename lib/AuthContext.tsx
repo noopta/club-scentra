@@ -1,11 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { auth, users, saveTokens, clearTokens, getAccessToken, User } from './api';
 
+const DEV_USER: User = {
+  id: 'dev-user-id',
+  username: 'devuser',
+  email: 'dev@clubscentra.app',
+  displayName: 'Dev User',
+  avatarUrl: null,
+  bio: null,
+  createdAt: new Date().toISOString(),
+} as unknown as User;
+
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (identifier: string, password: string) => Promise<void>;
+  devLogin: () => Promise<void>;
   googleLogin: (idToken: string) => Promise<void>;
   appleLogin: (identityToken: string, email: string | null, fullName: string | null) => Promise<void>;
   register: (data: { username: string; email: string; password: string; displayName?: string }) => Promise<void>;
@@ -69,6 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(res.user);
   };
 
+  const devLogin = async () => {
+    await saveTokens('dev-mock-access-token', 'dev-mock-refresh-token');
+    setUser(DEV_USER);
+  };
+
   const logout = async () => {
     await clearTokens();
     setUser(null);
@@ -87,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: !!user,
       login,
+      devLogin,
       googleLogin,
       appleLogin,
       register,

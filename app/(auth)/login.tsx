@@ -16,7 +16,7 @@ const googleLogo = require('@/assets/images/google-logo.png');
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, googleLogin, appleLogin } = useAuth();
+  const { login, devLogin, googleLogin, appleLogin } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -135,6 +135,17 @@ export default function LoginScreen() {
         >
           <Text style={styles.signupButtonText}>No account? Sign up</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.devButton}
+          onPress={async () => {
+            await devLogin();
+            router.replace('/(tabs)/explore');
+          }}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.devButtonText}>Dev Skip · Browse without login</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -207,4 +218,16 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.md,
   },
   signupButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.white },
+  devButton: {
+    marginTop: Theme.spacing.lg,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.border,
+  },
+  devButtonText: {
+    fontSize: Theme.fontSize.xs,
+    color: Theme.colors.textMuted,
+    fontStyle: 'italic',
+  },
 });
