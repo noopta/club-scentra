@@ -233,6 +233,27 @@ export const events = {
 
   removeRsvp: (id: string) =>
     request<{ ok: boolean }>(`/events/${id}/rsvp`, { method: 'DELETE' }),
+
+  getPosts: async (id: string): Promise<{ posts: EventPost[] }> => {
+    try {
+      return await request<{ posts: EventPost[] }>(`/events/${id}/posts`);
+    } catch {
+      return { posts: [] };
+    }
+  },
+};
+
+export type EventPost = {
+  id: string;
+  imageUrl: string;
+  caption: string | null;
+  createdAt: string;
+  author: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+  };
 };
 
 export const meets = {

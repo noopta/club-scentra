@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import StoryRing from './StoryRing';
 
 interface EventCardProps {
   name: string;
@@ -9,10 +10,11 @@ interface EventCardProps {
   date: string;
   image: string;
   onPress?: () => void;
+  onImagePress?: () => void;
   variant?: 'default' | 'popular' | 'past' | 'dark';
 }
 
-export default function EventCard({ name, location, date, image, onPress, variant = 'default' }: EventCardProps) {
+export default function EventCard({ name, location, date, image, onPress, onImagePress, variant = 'default' }: EventCardProps) {
   const isPopular = variant === 'popular';
   const isPast = variant === 'past';
   const isDark = variant === 'dark';
@@ -62,7 +64,19 @@ export default function EventCard({ name, location, date, image, onPress, varian
           </View>
         </View>
       </View>
-      <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
+      <TouchableOpacity
+        onPress={onImagePress}
+        activeOpacity={onImagePress ? 0.85 : 1}
+        disabled={!onImagePress}
+      >
+        <StoryRing width={130} height={95} borderWidth={3} borderRadius={13} innerBackground="#FFFFFF">
+          {image ? (
+            <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
+          ) : (
+            <View style={[styles.image, styles.imagePlaceholder]} />
+          )}
+        </StoryRing>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
@@ -114,8 +128,10 @@ const styles = StyleSheet.create({
     color: Theme.colors.white,
   },
   image: {
-    width: 130,
-    height: 95,
-    borderRadius: 10,
+    width: '100%',
+    height: '100%',
+  },
+  imagePlaceholder: {
+    backgroundColor: '#E5E5E5',
   },
 });

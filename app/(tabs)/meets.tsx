@@ -110,6 +110,7 @@ export default function MeetsScreen() {
                 image={event.imageUrl || undefined}
                 variant="popular"
                 onPress={() => router.push({ pathname: '/event-detail', params: { id: event.id } })}
+                onImagePress={() => router.push({ pathname: '/stories', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
               />
             ))}
 
@@ -125,6 +126,7 @@ export default function MeetsScreen() {
                 image={event.imageUrl || undefined}
                 variant="dark"
                 onPress={() => router.push({ pathname: '/event-detail', params: { id: event.id } })}
+                onImagePress={() => router.push({ pathname: '/stories', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
               />
             ))}
 
@@ -140,6 +142,7 @@ export default function MeetsScreen() {
                 image={event.imageUrl || undefined}
                 variant="past"
                 onPress={() => router.push({ pathname: '/event-detail', params: { id: event.id } })}
+                onImagePress={() => router.push({ pathname: '/stories', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
               />
             ))}
           </>
