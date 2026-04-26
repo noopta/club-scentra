@@ -6,3 +6,9 @@ id = "ymUvHFOR7ynhbaHUWPddF"
 uri = "file://screenshots/expo-qr.png"
 type = "image"
 title = "Expo Go QR Code — Club Scentra"
+
+[[outputs]]
+id = "n-PVcmRTdeYgXC75TLjod"
+uri = "file://docs/EVENT_STORIES_DESIGN_SPEC.md"
+type = "text"
+title = "Event Stories — Backend Design Spec"
