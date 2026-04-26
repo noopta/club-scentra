@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
@@ -19,11 +19,14 @@ export default function CreateEventPhotoScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handlePickImage = async () => {
+    setErrorMsg('');
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please allow photo library access to upload an event photo.');
+      setErrorMsg('Photo library permission is required to upload a picture.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -38,22 +41,37 @@ export default function CreateEventPhotoScreen() {
   };
 
   const handleCreate = async () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+
     if (!params.title) {
-      Alert.alert('Error', 'Event title is missing. Please go back and try again.');
+      setErrorMsg('Event title is missing. Please go back and start over.');
       return;
     }
+    if (!params.startAt) {
+      setErrorMsg('Start date/time is missing. Please go back and select one.');
+      return;
+    }
+
     setCreating(true);
     try {
       let imageUrl: string | undefined;
 
       if (imageUri) {
         setUploading(true);
-        const uploaded = await uploads.uploadImage(imageUri);
-        imageUrl = uploaded.url;
-        setUploading(false);
+        try {
+          const uploaded = await uploads.uploadImage(imageUri);
+          imageUrl = uploaded.url;
+        } catch (uploadErr: unknown) {
+          const msg = uploadErr instanceof Error ? uploadErr.message : 'Photo upload failed.';
+          console.error('[create-event] upload failed:', uploadErr);
+          throw new Error(`Photo upload failed: ${msg}`);
+        } finally {
+          setUploading(false);
+        }
       }
 
-      await eventsApi.create({
+      const payload = {
         title: params.title,
         description: params.description ?? '',
         startAt: params.startAt,
@@ -63,13 +81,18 @@ export default function CreateEventPhotoScreen() {
         region: params.region || undefined,
         postalCode: params.postalCode || undefined,
         imageUrl: imageUrl ?? null,
-      });
+      };
+      console.log('[create-event] POST /events payload:', payload);
 
-      Alert.alert('Success!', 'Your event has been created.', [
-        { text: 'View My Meets', onPress: () => router.replace('/(tabs)/meets') },
-      ]);
+      const created = await eventsApi.create(payload);
+      console.log('[create-event] success:', created);
+
+      setSuccessMsg('Your event has been created!');
+      setTimeout(() => router.replace('/(tabs)/meets'), 1200);
     } catch (err: unknown) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Could not create event. Please try again.');
+      const msg = err instanceof Error ? err.message : 'Could not create event.';
+      console.error('[create-event] failed:', err);
+      setErrorMsg(msg);
     } finally {
       setCreating(false);
       setUploading(false);
@@ -83,6 +106,17 @@ export default function CreateEventPhotoScreen() {
 
         <Text style={styles.title}>Add a Pic</Text>
         <Text style={styles.subtitle}>Upload a photo for your event</Text>
+
+        {errorMsg ? (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{errorMsg}</Text>
+          </View>
+        ) : null}
+        {successMsg ? (
+          <View style={styles.successBanner}>
+            <Text style={styles.successText}>{successMsg}</Text>
+          </View>
+        ) : null}
 
         <TouchableOpacity style={styles.uploadArea} onPress={handlePickImage} activeOpacity={0.7}>
           {imageUri ? (
@@ -131,6 +165,10 @@ const styles = StyleSheet.create({
   uploadSubtext: { fontSize: Theme.fontSize.sm, color: Theme.colors.textMuted, marginTop: Theme.spacing.xs },
   changePhotoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: Theme.spacing.md },
   changePhotoText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, fontWeight: Theme.fontWeight.medium },
+  errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },
+  errorText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, textAlign: 'center' },
+  successBanner: { backgroundColor: '#E8F5E9', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#A5D6A7', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },
+  successText: { fontSize: Theme.fontSize.sm, color: '#2E7D32', textAlign: 'center', fontWeight: Theme.fontWeight.medium },
   loadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 16, backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.lg, marginBottom: Theme.spacing.md },
   loadingText: { fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary },
   skipBtn: { alignItems: 'center', paddingVertical: Theme.spacing.md },
