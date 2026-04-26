@@ -167,6 +167,20 @@ export default function StoriesScreen() {
             <Text style={s.authorName} numberOfLines={1}>{story.authorName}</Text>
             <Text style={s.timeText}>{timeAgo(story.createdAt)}{params.eventTitle ? ` · ${params.eventTitle}` : ''}</Text>
           </View>
+          <TouchableOpacity
+            style={s.addBtn}
+            onPress={() => router.push({
+              pathname: '/create-post',
+              params: {
+                eventId: params.eventId,
+                eventTitle: params.eventTitle,
+                eventImage: params.eventImage,
+              },
+            })}
+            hitSlop={10}
+          >
+            <Ionicons name="add-circle-outline" size={28} color="#FFF" />
+          </TouchableOpacity>
           <TouchableOpacity style={s.closeBtn} onPress={() => router.back()} hitSlop={10}>
             <Ionicons name="close" size={28} color="#FFF" />
           </TouchableOpacity>
@@ -215,6 +229,7 @@ const s = StyleSheet.create({
   avatarLetter: { color: '#FFF', fontWeight: '700', fontSize: 16 },
   authorName: { color: '#FFF', fontWeight: '700', fontSize: 14 },
   timeText: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 1 },
+  addBtn: { padding: 4, marginRight: 4 },
   closeBtn: { padding: 4 },
   tapZones: { ...StyleSheet.absoluteFillObject, flexDirection: 'row' },
   tapZoneLeft: { flex: 1 },

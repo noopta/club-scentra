@@ -242,11 +242,20 @@ export const events = {
   removeRsvp: (id: string) =>
     request<{ ok: boolean }>(`/events/${id}/rsvp`, { method: 'DELETE' }),
 
-  getPosts: async (id: string): Promise<{ posts: EventPost[] }> => {
+  getPosts: async (
+    id: string,
+    opts?: { limit?: number; cursor?: string }
+  ): Promise<{ posts: EventPost[]; nextCursor: string | null }> => {
+    const qs = new URLSearchParams();
+    if (opts?.limit) qs.set('limit', String(opts.limit));
+    if (opts?.cursor) qs.set('cursor', opts.cursor);
+    const tail = qs.toString() ? `?${qs.toString()}` : '';
     try {
-      return await request<{ posts: EventPost[] }>(`/events/${id}/posts`);
+      return await request<{ posts: EventPost[]; nextCursor: string | null }>(
+        `/events/${id}/posts${tail}`
+      );
     } catch {
-      return { posts: [] };
+      return { posts: [], nextCursor: null };
     }
   },
 };
@@ -324,8 +333,8 @@ export const social = {
   getPosts: (userId: string) =>
     request<{ posts: Post[] }>(`/social/users/${userId}/posts`),
 
-  createPost: (imageUrl: string, caption?: string) =>
-    request<Post>('/social/posts', { method: 'POST', body: JSON.stringify({ imageUrl, caption }) }),
+  createPost: (input: { imageUrl: string; caption?: string; eventId?: string }) =>
+    request<Post>('/social/posts', { method: 'POST', body: JSON.stringify(input) }),
 };
 
 export const uploads = {

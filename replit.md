@@ -82,6 +82,18 @@ constants/
 - **Tab Icons**: `assets/images/icons/` — 5 custom PNGs (explore, meets, event, friends, profile) with opacity-based active/inactive states
 
 ## Notes
-- Profile images use Unsplash placeholder URLs
-- Mock data in MockData.ts for all events, friends, messages
-- No backend connected yet — all data is static
+- Profile images use Unsplash placeholder URLs as fallback
+- **Backend is live**: `https://api.airthreads.ai:4014/api` (Express + Prisma + PostgreSQL on EC2)
+- API client in `lib/api.ts` covers auth, events, meets, friends, messages, social, uploads
+
+## Event Stories Feature (live)
+- **Story rings** wrap every event card on Explore + Meets via `components/StoryRing.tsx`
+- **Viewer**: `app/stories.tsx` — fullscreen, 5-sec auto-advance, tap-zones for nav
+  - Loads via `events.getPosts(eventId, { limit?, cursor? })` → `{ posts, nextCursor }`
+  - Header has a "+" button that opens the creator pre-filled with this meet's id/title/image
+  - Falls back to event cover image with "Be the first to share" placeholder when feed is empty
+- **Creator**: `app/create-post.tsx` — image picker (camera + library) → `uploads.uploadImage` → `social.createPost({ imageUrl, caption?, eventId? })`
+  - Tied-to-event mode shows an orange event tag and `replace`s into `/stories` on success
+  - Profile-only mode (no eventId) just `back()`s on success
+- **Profile sheet** "Post Photo" → `/create-post` (profile-only); "Post to a Meet" → meets tab to pick a meet first
+- Backend contract documented in `docs/EVENT_STORIES_DESIGN_SPEC.md`

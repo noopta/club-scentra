@@ -85,7 +85,14 @@ export default function ProfileScreen() {
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Create Post</Text>
-            <TouchableOpacity style={styles.modalOption} activeOpacity={0.8} onPress={() => setPostModalVisible(false)}>
+            <TouchableOpacity
+              style={styles.modalOption}
+              activeOpacity={0.8}
+              onPress={() => {
+                setPostModalVisible(false);
+                router.push('/create-post');
+              }}
+            >
               <View style={styles.modalIconWrap}>
                 <Ionicons name="image-outline" size={26} color={Theme.colors.primary} />
               </View>
@@ -95,13 +102,20 @@ export default function ProfileScreen() {
               </View>
               <Ionicons name="chevron-forward" size={20} color={Theme.colors.textSecondary} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.modalOption} activeOpacity={0.8} onPress={() => setPostModalVisible(false)}>
+            <TouchableOpacity
+              style={styles.modalOption}
+              activeOpacity={0.8}
+              onPress={() => {
+                setPostModalVisible(false);
+                router.push('/(tabs)/meets');
+              }}
+            >
               <View style={styles.modalIconWrap}>
                 <Ionicons name="flame-outline" size={26} color={Theme.colors.primary} />
               </View>
               <View style={styles.modalOptionText}>
-                <Text style={styles.modalOptionTitle}>Post Story</Text>
-                <Text style={styles.modalOptionSub}>Share a 24-hour story</Text>
+                <Text style={styles.modalOptionTitle}>Post to a Meet</Text>
+                <Text style={styles.modalOptionSub}>Pick a meet and share a photo from it</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Theme.colors.textSecondary} />
             </TouchableOpacity>
