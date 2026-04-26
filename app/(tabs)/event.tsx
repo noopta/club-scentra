@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
 import StepIndicator from '@/components/StepIndicator';
@@ -10,10 +10,12 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const [eventName, setEventName] = useState('');
   const [aboutEvent, setAboutEvent] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleNext = () => {
+    setErrorMsg('');
     if (!eventName.trim()) {
-      Alert.alert('Required', 'Please enter an event name.');
+      setErrorMsg('Please enter an event name to continue.');
       return;
     }
     router.push({
@@ -29,6 +31,12 @@ export default function CreateEventScreen() {
 
         <Text style={styles.title}>Create Event</Text>
         <Text style={styles.subtitle}>Name your meet</Text>
+
+        {errorMsg ? (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{errorMsg}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.formContainer}>
           <InputField
@@ -63,4 +71,6 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xxl },
   formContainer: { gap: Theme.spacing.md },
   aboutContainer: { marginBottom: 0 },
+  errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },
+  errorText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, textAlign: 'center' },
 });

@@ -69,6 +69,14 @@ async function request<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    // Backend returns { error: "Validation error", details: { fieldName: ["msg"] } } for 400s.
+    // Flatten the first field message into the thrown error so the UI can show something useful.
+    if (body && body.details && typeof body.details === 'object') {
+      const fieldErrors = Object.entries(body.details as Record<string, string[]>)
+        .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : String(msgs)}`)
+        .join(' • ');
+      throw new Error(fieldErrors || body.error || `Request failed (${res.status})`);
+    }
     throw new Error(body.error || `Request failed (${res.status})`);
   }
 
