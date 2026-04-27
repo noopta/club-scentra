@@ -182,6 +182,12 @@ export const auth = {
   google: (idToken: string) =>
     request<AuthResponse>('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
 
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ ok: boolean }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+
   apple: async (identityToken: string, email: string | null, fullName: string | null): Promise<AuthResponse> => {
     const res = await fetch('https://api.airthreads.ai:4014/api/auth/apple', {
       method: 'POST',
@@ -210,6 +216,8 @@ export const users = {
   getById: (id: string) => request<PublicUser>(`/users/${id}`),
 
   search: (q: string) => request<PublicUser[]>(`/users/search?q=${encodeURIComponent(q)}`),
+
+  deleteMe: () => request<void>('/users/me', { method: 'DELETE' }),
 };
 
 export const events = {

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import StepIndicator from '@/components/StepIndicator';
 import RedButton from '@/components/RedButton';
 import TimePicker from '@/components/TimePicker';
@@ -30,6 +31,9 @@ function timeStringToISO(dateStr: string, timeStr: string): string | null {
 }
 
 export default function CreateEventScheduleScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const params = useLocalSearchParams<{
     title: string; description: string;
@@ -210,40 +214,40 @@ export default function CreateEventScheduleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.lg, paddingBottom: Theme.spacing.xxl },
-  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginTop: Theme.spacing.md, marginBottom: Theme.spacing.xs },
-  subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.lg },
+  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, textAlign: 'center', marginTop: Theme.spacing.md, marginBottom: Theme.spacing.xs },
+  subtitle: { fontSize: Theme.fontSize.md, color: c.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.lg },
   errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },
-  errorText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, textAlign: 'center' },
+  errorText: { fontSize: Theme.fontSize.sm, color: c.primary, textAlign: 'center' },
   formContainer: { gap: Theme.spacing.md },
-  inputLabel: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary, marginBottom: 6 },
-  pickerButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: Theme.colors.border, paddingHorizontal: Theme.spacing.md, paddingVertical: 14, gap: 10 },
-  pickerText: { flex: 1, fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary, fontWeight: Theme.fontWeight.medium },
-  pickerPlaceholder: { color: Theme.colors.textMuted, fontWeight: '400' },
+  inputLabel: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: c.textPrimary, marginBottom: 6 },
+  pickerButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: c.white, borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: c.border, paddingHorizontal: Theme.spacing.md, paddingVertical: 14, gap: 10 },
+  pickerText: { flex: 1, fontSize: Theme.fontSize.md, color: c.textPrimary, fontWeight: Theme.fontWeight.medium },
+  pickerPlaceholder: { color: c.textMuted, fontWeight: '400' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  calendarSheet: { backgroundColor: Theme.colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40 },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Theme.colors.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
-  calTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.md, textAlign: 'center' },
+  calendarSheet: { backgroundColor: c.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: c.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
+  calTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.md, textAlign: 'center' },
   calHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Theme.spacing.sm, paddingHorizontal: 4 },
   navBtn: { padding: Theme.spacing.sm },
-  monthLabel: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
+  monthLabel: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: c.textPrimary },
   dayRow: { flexDirection: 'row', marginBottom: 4 },
   dayLabelWrap: { width: `${100 / 7}%`, alignItems: 'center', justifyContent: 'center', paddingVertical: 6 },
-  dayLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
+  dayLabel: { fontSize: Theme.fontSize.xs, color: c.textSecondary, fontWeight: Theme.fontWeight.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cellWrap: { width: `${100 / 7}%`, aspectRatio: 1, padding: 3 },
   cellInner: { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 100 },
-  cellSelected: { backgroundColor: Theme.colors.primary },
-  cellToday: { borderWidth: 1.5, borderColor: Theme.colors.primary },
+  cellSelected: { backgroundColor: c.primary },
+  cellToday: { borderWidth: 1.5, borderColor: c.primary },
   cellPast: { opacity: 0.3 },
-  cellText: { fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary, fontWeight: Theme.fontWeight.medium },
-  cellTextSelected: { color: Theme.colors.white, fontWeight: Theme.fontWeight.bold },
-  cellTextToday: { color: Theme.colors.primary, fontWeight: Theme.fontWeight.bold },
-  cellTextPast: { color: Theme.colors.textMuted },
+  cellText: { fontSize: Theme.fontSize.md, color: c.textPrimary, fontWeight: Theme.fontWeight.medium },
+  cellTextSelected: { color: c.white, fontWeight: Theme.fontWeight.bold },
+  cellTextToday: { color: c.primary, fontWeight: Theme.fontWeight.bold },
+  cellTextPast: { color: c.textMuted },
   selectedDateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: Theme.spacing.md, backgroundColor: '#FFF5F5', padding: Theme.spacing.md, borderRadius: Theme.borderRadius.sm },
-  selectedDateText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, fontWeight: Theme.fontWeight.medium },
-  closeBtn: { backgroundColor: Theme.colors.primary, borderRadius: Theme.borderRadius.lg, paddingVertical: 14, alignItems: 'center', marginTop: Theme.spacing.lg },
-  closeBtnText: { color: Theme.colors.white, fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold },
+  selectedDateText: { fontSize: Theme.fontSize.sm, color: c.primary, fontWeight: Theme.fontWeight.medium },
+  closeBtn: { backgroundColor: c.primary, borderRadius: Theme.borderRadius.lg, paddingVertical: 14, alignItems: 'center', marginTop: Theme.spacing.lg },
+  closeBtnText: { color: c.white, fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold },
 });

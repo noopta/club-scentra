@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import { meets as meetsApi, Event } from '@/lib/api';
 import EventCard from '@/components/EventCard';
 import SearchBar from '@/components/SearchBar';
@@ -22,6 +23,9 @@ function formatLocation(event: Event): string {
 }
 
 export default function MeetsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const { user } = useAuth();
   const [searchText, setSearchText] = useState('');
@@ -202,30 +206,30 @@ export default function MeetsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollContent: { paddingHorizontal: Theme.spacing.md, paddingTop: 60, paddingBottom: Theme.spacing.xl },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Theme.spacing.md },
   headerLogo: { width: 140, height: 35 },
-  savedBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: Theme.colors.white, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Theme.colors.border },
-  savedBtnActive: { borderColor: Theme.colors.primary, backgroundColor: '#FFF5F5' },
-  savedBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: Theme.colors.primary, borderRadius: 8, width: 16, height: 16, alignItems: 'center', justifyContent: 'center' },
-  savedBadgeText: { color: Theme.colors.white, fontSize: 10, fontWeight: Theme.fontWeight.bold },
-  pageTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.sm },
+  savedBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: c.white, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: c.border },
+  savedBtnActive: { borderColor: c.primary, backgroundColor: '#FFF5F5' },
+  savedBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: c.primary, borderRadius: 8, width: 16, height: 16, alignItems: 'center', justifyContent: 'center' },
+  savedBadgeText: { color: c.white, fontSize: 10, fontWeight: Theme.fontWeight.bold },
+  pageTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.sm },
   filterRow: { flexDirection: 'row', alignItems: 'center', gap: Theme.spacing.sm, marginBottom: Theme.spacing.md },
-  sectionTitle: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.sm, marginTop: Theme.spacing.sm },
-  emptyText: { color: Theme.colors.textSecondary, fontSize: Theme.fontSize.sm, marginBottom: Theme.spacing.md },
+  sectionTitle: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.sm, marginTop: Theme.spacing.sm },
+  emptyText: { color: c.textSecondary, fontSize: Theme.fontSize.sm, marginBottom: Theme.spacing.md },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: Theme.colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40, maxHeight: '75%' },
-  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Theme.colors.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
+  modalSheet: { backgroundColor: c.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40, maxHeight: '75%' },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: c.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
   modalTitleRow: { flexDirection: 'row', alignItems: 'center', gap: Theme.spacing.sm, marginBottom: Theme.spacing.lg },
-  modalTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
+  modalTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: c.textPrimary },
   emptyState: { alignItems: 'center', paddingVertical: Theme.spacing.xxl },
-  emptyStateText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textSecondary, marginTop: Theme.spacing.md },
-  emptySubtext: { fontSize: Theme.fontSize.sm, color: Theme.colors.textMuted, textAlign: 'center', marginTop: Theme.spacing.xs },
-  savedItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: Theme.spacing.md, borderBottomWidth: 1, borderBottomColor: Theme.colors.border, gap: Theme.spacing.md },
+  emptyStateText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textSecondary, marginTop: Theme.spacing.md },
+  emptySubtext: { fontSize: Theme.fontSize.sm, color: c.textMuted, textAlign: 'center', marginTop: Theme.spacing.xs },
+  savedItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: Theme.spacing.md, borderBottomWidth: 1, borderBottomColor: c.border, gap: Theme.spacing.md },
   savedItemImage: { width: 56, height: 56, borderRadius: 10 },
   savedItemInfo: { flex: 1 },
-  savedItemName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textPrimary },
-  savedItemMeta: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, marginTop: 2 },
+  savedItemName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
+  savedItemMeta: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginTop: 2 },
 });

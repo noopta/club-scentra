@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import InputField from '@/components/InputField';
 import { useAuth } from '@/lib/AuthContext';
@@ -9,6 +10,9 @@ import { useAuth } from '@/lib/AuthContext';
 const logo = require('@/assets/images/logo.png');
 
 export default function SignupDetailsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const { register } = useAuth();
   const [username, setUsername] = useState('');
@@ -155,8 +159,8 @@ export default function SignupDetailsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollContent: {
     paddingHorizontal: Theme.spacing.xl,
     paddingTop: 60,
@@ -169,7 +173,7 @@ const styles = StyleSheet.create({
     fontSize: Theme.fontSize.xxl,
     fontWeight: Theme.fontWeight.bold,
     fontStyle: 'italic',
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     textAlign: 'center',
     marginBottom: Theme.spacing.lg,
   },
@@ -179,41 +183,41 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Theme.colors.border,
+    backgroundColor: c.border,
     marginRight: Theme.spacing.sm,
   },
-  requirementMet: { backgroundColor: Theme.colors.success },
-  requirementText: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary },
+  requirementMet: { backgroundColor: c.success },
+  requirementText: { fontSize: Theme.fontSize.sm, color: c.textSecondary },
   checkboxRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Theme.spacing.lg },
   checkbox: {
     width: 22,
     height: 22,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: Theme.colors.border,
+    borderColor: c.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Theme.spacing.sm,
   },
-  checkboxChecked: { backgroundColor: Theme.colors.primary, borderColor: Theme.colors.primary },
-  checkboxLabel: { fontSize: Theme.fontSize.sm, color: Theme.colors.textPrimary },
+  checkboxChecked: { backgroundColor: c.primary, borderColor: c.primary },
+  checkboxLabel: { fontSize: Theme.fontSize.sm, color: c.textPrimary },
   termsLink: { textDecorationLine: 'underline', fontWeight: Theme.fontWeight.medium },
   createButton: {
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderRadius: Theme.borderRadius.xl,
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: c.border,
   },
   buttonDisabled: { opacity: 0.6 },
   createButtonText: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   loginButton: {
-    backgroundColor: Theme.colors.black,
+    backgroundColor: c.black,
     borderRadius: Theme.borderRadius.xl,
     paddingVertical: 16,
     alignItems: 'center',
@@ -222,6 +226,6 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.white,
+    color: c.white,
   },
 });

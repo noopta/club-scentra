@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import { messages as messagesApi, Message } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -11,6 +12,9 @@ function formatTime(dateStr: string): string {
 }
 
 export default function ChatScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const { user } = useAuth();
   const { id, name, isGroup } = useLocalSearchParams<{ id: string; name: string; isGroup?: string }>();
@@ -141,31 +145,31 @@ export default function ChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', paddingTop: Platform.OS === 'ios' ? 54 : 40, paddingHorizontal: Theme.spacing.md, paddingBottom: Theme.spacing.md, backgroundColor: Theme.colors.white, borderBottomWidth: 1, borderBottomColor: Theme.colors.border },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
+  header: { flexDirection: 'row', alignItems: 'center', paddingTop: Platform.OS === 'ios' ? 54 : 40, paddingHorizontal: Theme.spacing.md, paddingBottom: Theme.spacing.md, backgroundColor: c.white, borderBottomWidth: 1, borderBottomColor: c.border },
   backButton: { padding: Theme.spacing.sm, marginRight: Theme.spacing.sm },
   headerCenter: { flex: 1 },
-  headerName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
-  headerSub: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary },
+  headerName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: c.textPrimary },
+  headerSub: { fontSize: Theme.fontSize.xs, color: c.textSecondary },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   messageList: { flex: 1 },
   messageListContent: { paddingHorizontal: Theme.spacing.md, paddingVertical: Theme.spacing.md, gap: 12 },
-  emptyText: { textAlign: 'center', color: Theme.colors.textMuted, marginTop: 40, fontSize: Theme.fontSize.sm },
+  emptyText: { textAlign: 'center', color: c.textMuted, marginTop: 40, fontSize: Theme.fontSize.sm },
   bubbleRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   bubbleRowMine: { flexDirection: 'row-reverse' },
   bubbleAvatar: { width: 28, height: 28, borderRadius: 14 },
   bubbleContent: { maxWidth: '75%' },
-  bubbleSender: { fontSize: 11, color: Theme.colors.textSecondary, marginBottom: 3, marginLeft: 4 },
+  bubbleSender: { fontSize: 11, color: c.textSecondary, marginBottom: 3, marginLeft: 4 },
   bubble: { borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
-  bubbleMine: { backgroundColor: Theme.colors.primary, borderBottomRightRadius: 4 },
-  bubbleTheirs: { backgroundColor: Theme.colors.white, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: Theme.colors.border },
-  bubbleText: { fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary },
-  bubbleTextMine: { color: Theme.colors.white },
-  bubbleTime: { fontSize: 11, color: Theme.colors.textMuted, marginTop: 3, marginLeft: 4 },
+  bubbleMine: { backgroundColor: c.primary, borderBottomRightRadius: 4 },
+  bubbleTheirs: { backgroundColor: c.white, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: c.border },
+  bubbleText: { fontSize: Theme.fontSize.md, color: c.textPrimary },
+  bubbleTextMine: { color: c.white },
+  bubbleTime: { fontSize: 11, color: c.textMuted, marginTop: 3, marginLeft: 4 },
   bubbleTimeMine: { textAlign: 'right', marginRight: 4 },
-  inputBar: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: Theme.spacing.md, paddingVertical: Theme.spacing.sm, paddingBottom: Platform.OS === 'ios' ? 28 : Theme.spacing.sm, backgroundColor: Theme.colors.white, borderTopWidth: 1, borderTopColor: Theme.colors.border, gap: Theme.spacing.sm },
-  input: { flex: 1, backgroundColor: Theme.colors.background, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10, fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary, maxHeight: 120 },
-  sendButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: Theme.colors.primary, alignItems: 'center', justifyContent: 'center' },
-  sendButtonDisabled: { backgroundColor: Theme.colors.border },
+  inputBar: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: Theme.spacing.md, paddingVertical: Theme.spacing.sm, paddingBottom: Platform.OS === 'ios' ? 28 : Theme.spacing.sm, backgroundColor: c.white, borderTopWidth: 1, borderTopColor: c.border, gap: Theme.spacing.sm },
+  input: { flex: 1, backgroundColor: c.background, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10, fontSize: Theme.fontSize.md, color: c.textPrimary, maxHeight: 120 },
+  sendButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: c.primary, alignItems: 'center', justifyContent: 'center' },
+  sendButtonDisabled: { backgroundColor: c.border },
 });

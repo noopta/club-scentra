@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import StepIndicator from '@/components/StepIndicator';
 import RedButton from '@/components/RedButton';
 import WizardHeader from '@/components/WizardHeader';
@@ -10,6 +11,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { events as eventsApi, uploads } from '@/lib/api';
 
 export default function CreateEventPhotoScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const params = useLocalSearchParams<{
     title: string; description: string;
@@ -160,23 +164,23 @@ export default function CreateEventPhotoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   content: { flex: 1, paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.lg },
-  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xs },
-  subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xxl },
-  uploadArea: { backgroundColor: Theme.colors.inputBackground, borderRadius: Theme.borderRadius.lg, borderWidth: 2, borderColor: Theme.colors.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', height: 200, marginBottom: Theme.spacing.md, overflow: 'hidden' },
+  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xs },
+  subtitle: { fontSize: Theme.fontSize.md, color: c.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xxl },
+  uploadArea: { backgroundColor: c.inputBackground, borderRadius: Theme.borderRadius.lg, borderWidth: 2, borderColor: c.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', height: 200, marginBottom: Theme.spacing.md, overflow: 'hidden' },
   previewImage: { width: '100%', height: '100%', borderRadius: Theme.borderRadius.lg },
-  uploadText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textSecondary, marginTop: Theme.spacing.sm },
-  uploadSubtext: { fontSize: Theme.fontSize.sm, color: Theme.colors.textMuted, marginTop: Theme.spacing.xs },
+  uploadText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textSecondary, marginTop: Theme.spacing.sm },
+  uploadSubtext: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: Theme.spacing.xs },
   changePhotoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: Theme.spacing.md },
-  changePhotoText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, fontWeight: Theme.fontWeight.medium },
+  changePhotoText: { fontSize: Theme.fontSize.sm, color: c.primary, fontWeight: Theme.fontWeight.medium },
   errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },
-  errorText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, textAlign: 'center' },
+  errorText: { fontSize: Theme.fontSize.sm, color: c.primary, textAlign: 'center' },
   successBanner: { backgroundColor: '#E8F5E9', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#A5D6A7', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },
   successText: { fontSize: Theme.fontSize.sm, color: '#2E7D32', textAlign: 'center', fontWeight: Theme.fontWeight.medium },
-  loadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 16, backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.lg, marginBottom: Theme.spacing.md },
-  loadingText: { fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary },
+  loadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 16, backgroundColor: c.white, borderRadius: Theme.borderRadius.lg, marginBottom: Theme.spacing.md },
+  loadingText: { fontSize: Theme.fontSize.md, color: c.textPrimary },
   skipBtn: { alignItems: 'center', paddingVertical: Theme.spacing.md },
-  skipText: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, textDecorationLine: 'underline' },
+  skipText: { fontSize: Theme.fontSize.sm, color: c.textSecondary, textDecorationLine: 'underline' },
 });

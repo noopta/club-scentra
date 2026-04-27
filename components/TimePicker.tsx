@@ -1,8 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
-  Modal, View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform,
+  Modal, View, Text, ScrollView, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 const ITEM_H = 48;
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
@@ -16,11 +17,14 @@ type Props = {
   onClose: () => void;
 };
 
-function Column({ items, selected, onSelect }: {
+function Column({ items, selected, onSelect, visible }: {
   items: string[];
   selected: string;
   onSelect: (v: string) => void;
+  visible: boolean;
 }) {
+  const { colors } = useTheme();
+  const col = useMemo(() => makeColStyles(colors), [colors]);
   const ref = useRef<ScrollView>(null);
   const idx = items.indexOf(selected);
 
@@ -28,7 +32,7 @@ function Column({ items, selected, onSelect }: {
     if (ref.current && idx >= 0) {
       ref.current.scrollTo({ y: idx * ITEM_H, animated: false });
     }
-  }, [visible]);
+  }, [visible, idx]);
 
   return (
     <View style={col.wrap}>
@@ -68,10 +72,9 @@ function Column({ items, selected, onSelect }: {
   );
 }
 
-let visible = false;
-
 export default function TimePicker({ visible: v, value, onConfirm, onClose }: Props) {
-  visible = v;
+  const { colors } = useTheme();
+  const s = useMemo(() => makeSheetStyles(colors), [colors]);
 
   const parseValue = () => {
     const match = value.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -96,6 +99,7 @@ export default function TimePicker({ visible: v, value, onConfirm, onClose }: Pr
       setMinute(p.m);
       setPeriod(p.p);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [v]);
 
   const handleConfirm = () => {
@@ -111,9 +115,9 @@ export default function TimePicker({ visible: v, value, onConfirm, onClose }: Pr
           <Text style={s.title}>Select Time</Text>
 
           <View style={s.pickerRow}>
-            <Column items={HOURS} selected={hour} onSelect={setHour} />
+            <Column items={HOURS} selected={hour} onSelect={setHour} visible={v} />
             <Text style={s.colon}>:</Text>
-            <Column items={MINUTES} selected={minute} onSelect={setMinute} />
+            <Column items={MINUTES} selected={minute} onSelect={setMinute} visible={v} />
             <View style={s.periodCol}>
               {PERIODS.map((p) => (
                 <TouchableOpacity
@@ -136,35 +140,35 @@ export default function TimePicker({ visible: v, value, onConfirm, onClose }: Pr
   );
 }
 
-const col = StyleSheet.create({
+const makeColStyles = (c: typeof Theme.colors) => StyleSheet.create({
   wrap: { width: 72, height: ITEM_H * 5, overflow: 'hidden', position: 'relative' },
   highlight: {
     position: 'absolute', top: ITEM_H * 2, left: 0, right: 0, height: ITEM_H,
-    backgroundColor: '#F5F5F5', borderRadius: 10, zIndex: 0,
+    backgroundColor: c.inputBackground, borderRadius: 10, zIndex: 0,
   },
   item: { height: ITEM_H, alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: 22, color: Theme.colors.textMuted, fontWeight: '400' },
-  activeLabel: { fontSize: 26, color: Theme.colors.textPrimary, fontWeight: Theme.fontWeight.bold },
+  label: { fontSize: 22, color: c.textMuted, fontWeight: '400' },
+  activeLabel: { fontSize: 26, color: c.textPrimary, fontWeight: Theme.fontWeight.bold },
 });
 
-const s = StyleSheet.create({
+const makeSheetStyles = (c: typeof Theme.colors) => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   sheet: {
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.cardBackground,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: Theme.spacing.xl,
     paddingTop: Theme.spacing.md,
     paddingBottom: 40,
   },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Theme.colors.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
-  title: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.lg },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: c.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
+  title: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.lg },
   pickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  colon: { fontSize: 28, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginHorizontal: 2, marginBottom: 4 },
+  colon: { fontSize: 28, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginHorizontal: 2, marginBottom: 4 },
   periodCol: { marginLeft: Theme.spacing.lg, gap: Theme.spacing.sm, justifyContent: 'center' },
-  periodBtn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: Theme.borderRadius.md, borderWidth: 1.5, borderColor: Theme.colors.border },
-  periodBtnActive: { backgroundColor: Theme.colors.primary, borderColor: Theme.colors.primary },
-  periodText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textSecondary },
-  periodTextActive: { color: Theme.colors.white },
-  confirmBtn: { backgroundColor: Theme.colors.primary, borderRadius: Theme.borderRadius.lg, paddingVertical: 14, alignItems: 'center', marginTop: Theme.spacing.xl },
-  confirmText: { color: Theme.colors.white, fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold },
+  periodBtn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: Theme.borderRadius.md, borderWidth: 1.5, borderColor: c.border },
+  periodBtnActive: { backgroundColor: c.primary, borderColor: c.primary },
+  periodText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: c.textSecondary },
+  periodTextActive: { color: c.white },
+  confirmBtn: { backgroundColor: c.primary, borderRadius: Theme.borderRadius.lg, paddingVertical: 14, alignItems: 'center', marginTop: Theme.spacing.xl },
+  confirmText: { color: c.white, fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold },
 });

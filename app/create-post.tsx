@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Image, TextInput,
   ActivityIndicator, ScrollView, Platform, KeyboardAvoidingView,
@@ -7,9 +7,13 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import { uploads, social } from '@/lib/api';
 
 export default function CreatePostScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const params = useLocalSearchParams<{
     eventId?: string;
@@ -180,8 +184,8 @@ export default function CreatePostScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   topBar: {
     paddingTop: Platform.OS === 'ios' ? 54 : 32,
     paddingHorizontal: Theme.spacing.md,
@@ -190,11 +194,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Theme.colors.border,
+    borderBottomColor: c.border,
   },
-  title: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
+  title: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: c.textPrimary },
   postBtn: {
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: c.primary,
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
@@ -211,25 +215,25 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: '#FFF1E6',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Theme.colors.border,
+    borderBottomColor: c.border,
   },
-  eventTagText: { color: Theme.colors.primary, fontWeight: '600', fontSize: 13, flex: 1 },
+  eventTagText: { color: c.primary, fontWeight: '600', fontSize: 13, flex: 1 },
   banner: { paddingHorizontal: Theme.spacing.md, paddingVertical: 10 },
   bannerError: { backgroundColor: '#FFE5E5' },
   bannerInfo: { backgroundColor: '#E5F3FF' },
   bannerText: { color: '#B00020', fontSize: 13, fontWeight: '500' },
   scrollBody: { padding: Theme.spacing.md, paddingBottom: 40 },
   pickerCard: {
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderRadius: 16,
     padding: 28,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: c.border,
     borderStyle: 'dashed',
   },
-  pickerTitle: { fontSize: 16, fontWeight: '700', color: Theme.colors.textPrimary, marginTop: 12 },
-  pickerSub: { fontSize: 13, color: Theme.colors.textSecondary, textAlign: 'center', marginTop: 6, marginBottom: 20 },
+  pickerTitle: { fontSize: 16, fontWeight: '700', color: c.textPrimary, marginTop: 12 },
+  pickerSub: { fontSize: 13, color: c.textSecondary, textAlign: 'center', marginTop: 6, marginBottom: 20 },
   pickerActions: { width: '100%', gap: 10 },
   pickerBtn: {
     flexDirection: 'row',
@@ -237,10 +241,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 12,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: c.background,
     borderRadius: 10,
   },
-  pickerBtnText: { fontSize: 14, fontWeight: '600', color: Theme.colors.textPrimary },
+  pickerBtnText: { fontSize: 14, fontWeight: '600', color: c.textPrimary },
   previewWrap: { borderRadius: 16, overflow: 'hidden', backgroundColor: '#000' },
   preview: { width: '100%', aspectRatio: 9 / 16, maxHeight: 480 },
   changeBtn: {
@@ -256,17 +260,17 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   changeBtnText: { color: '#FFF', fontSize: 12, fontWeight: '600' },
-  label: { fontSize: 13, fontWeight: '600', color: Theme.colors.textSecondary, marginTop: 20, marginBottom: 8 },
+  label: { fontSize: 13, fontWeight: '600', color: c.textSecondary, marginTop: 20, marginBottom: 8 },
   captionInput: {
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: c.border,
     padding: 12,
     fontSize: 15,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     minHeight: 100,
     textAlignVertical: 'top',
   },
-  charCount: { fontSize: 11, color: Theme.colors.textSecondary, alignSelf: 'flex-end', marginTop: 4 },
+  charCount: { fontSize: 11, color: c.textSecondary, alignSelf: 'flex-end', marginTop: 4 },
 });

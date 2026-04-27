@@ -35,6 +35,15 @@ router.patch(
   })
 );
 
+router.delete(
+  '/me',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    await authService.deleteAccount((req as AuthedRequest).userId);
+    res.status(204).end();
+  })
+);
+
 router.get(
   '/me/settings',
   requireAuth,

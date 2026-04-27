@@ -3,19 +3,19 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { AuthProvider } from '@/lib/AuthContext';
+import { ThemeProvider, useTheme } from '@/lib/ThemeContext';
 
-export default function RootLayout() {
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) {
-    return null;
-  }
-
+function ThemedStack() {
+  const { mode, colors, isReady } = useTheme();
+  if (!isReady) return null;
   return (
-    <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }}>
+    <>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
@@ -28,11 +28,34 @@ export default function RootLayout() {
         <Stack.Screen name="edit-profile" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="messages" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="terms" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="privacy-policy" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="change-password" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="privacy-settings" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="help" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="report-problem" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="chat" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="create-group" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="dark" />
-    </AuthProvider>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+    </>
+  );
+}
+
+export default function RootLayout() {
+  const [loaded] = useFonts({
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  });
+
+  if (!loaded) {
+    return null;
+  }
+
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <ThemedStack />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

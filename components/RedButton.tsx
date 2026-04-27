@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface RedButtonProps {
   title: string;
@@ -11,6 +12,9 @@ interface RedButtonProps {
 }
 
 export default function RedButton({ title, onPress, style, textStyle, disabled }: RedButtonProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <TouchableOpacity
       style={[styles.button, disabled && styles.disabled, style]}
@@ -23,9 +27,9 @@ export default function RedButton({ title, onPress, style, textStyle, disabled }
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   button: {
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: c.primary,
     borderRadius: Theme.borderRadius.lg,
     paddingVertical: 16,
     paddingHorizontal: Theme.spacing.lg,
@@ -37,7 +41,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   text: {
-    color: Theme.colors.white,
+    color: c.white,
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.bold,
   },

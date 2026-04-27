@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 export default function PrivacyPolicyScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
 
   return (
@@ -59,14 +63,14 @@ export default function PrivacyPolicyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: Platform.OS === 'ios' ? 54 : 40, paddingHorizontal: Theme.spacing.md, paddingBottom: Theme.spacing.md },
   backButton: { padding: Theme.spacing.sm },
-  headerTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
+  headerTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary },
   headerSpacer: { width: 40 },
   scrollContent: { paddingHorizontal: Theme.spacing.lg, paddingBottom: Theme.spacing.xxl },
-  lastUpdated: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, marginBottom: Theme.spacing.lg, fontStyle: 'italic' },
-  sectionTitle: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginTop: Theme.spacing.md, marginBottom: Theme.spacing.sm },
-  bodyText: { fontSize: Theme.fontSize.sm, color: Theme.colors.textPrimary, lineHeight: 22, marginBottom: Theme.spacing.sm },
+  lastUpdated: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginBottom: Theme.spacing.lg, fontStyle: 'italic' },
+  sectionTitle: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginTop: Theme.spacing.md, marginBottom: Theme.spacing.sm },
+  bodyText: { fontSize: Theme.fontSize.sm, color: c.textPrimary, lineHeight: 22, marginBottom: Theme.spacing.sm },
 });

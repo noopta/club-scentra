@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import { events as eventsApi, Event } from '@/lib/api';
 import EventCard from '@/components/EventCard';
 import SearchBar from '@/components/SearchBar';
@@ -21,6 +22,9 @@ function formatEventLocation(event: Event): string {
 }
 
 export default function ExploreScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
@@ -121,8 +125,8 @@ export default function ExploreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollContent: {
     paddingHorizontal: Theme.spacing.md,
     paddingTop: 60,
@@ -133,7 +137,7 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: Theme.fontSize.xl,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: Theme.spacing.md,
   },
   filterRow: {
@@ -144,12 +148,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginTop: Theme.spacing.lg,
     marginBottom: Theme.spacing.sm,
   },
   emptyText: {
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     fontSize: Theme.fontSize.sm,
     textAlign: 'center',
     marginTop: Theme.spacing.md,

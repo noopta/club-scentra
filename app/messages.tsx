@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import { messages as messagesApi, Conversation } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -15,6 +16,9 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function MessagesScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const { user } = useAuth();
   const [tab, setTab] = useState<'direct' | 'groups'>('direct');
@@ -128,27 +132,27 @@ export default function MessagesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 54, paddingHorizontal: Theme.spacing.md, paddingBottom: Theme.spacing.md, backgroundColor: Theme.colors.white, borderBottomWidth: 1, borderBottomColor: Theme.colors.border },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 54, paddingHorizontal: Theme.spacing.md, paddingBottom: Theme.spacing.md, backgroundColor: c.white, borderBottomWidth: 1, borderBottomColor: c.border },
   backButton: { padding: Theme.spacing.sm },
-  headerTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
+  headerTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary },
   composeButton: { padding: Theme.spacing.sm },
-  tabRow: { flexDirection: 'row', backgroundColor: Theme.colors.white, borderBottomWidth: 1, borderBottomColor: Theme.colors.border },
+  tabRow: { flexDirection: 'row', backgroundColor: c.white, borderBottomWidth: 1, borderBottomColor: c.border },
   tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: Theme.colors.primary },
-  tabText: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.medium },
-  tabTextActive: { color: Theme.colors.primary },
+  tabActive: { borderBottomWidth: 2, borderBottomColor: c.primary },
+  tabText: { fontSize: Theme.fontSize.md, color: c.textSecondary, fontWeight: Theme.fontWeight.medium },
+  tabTextActive: { color: c.primary },
   scrollContent: { paddingVertical: Theme.spacing.sm },
-  messageCard: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Theme.spacing.md, paddingVertical: Theme.spacing.md, borderBottomWidth: 1, borderBottomColor: Theme.colors.border, backgroundColor: Theme.colors.white },
+  messageCard: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Theme.spacing.md, paddingVertical: Theme.spacing.md, borderBottomWidth: 1, borderBottomColor: c.border, backgroundColor: c.white },
   avatarWrapper: { marginRight: Theme.spacing.md },
   avatar: { width: 50, height: 50, borderRadius: 25 },
-  avatarPlaceholder: { backgroundColor: Theme.colors.border, alignItems: 'center', justifyContent: 'center' },
+  avatarPlaceholder: { backgroundColor: c.border, alignItems: 'center', justifyContent: 'center' },
   messageInfo: { flex: 1 },
   messageTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
-  messageName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textPrimary, flex: 1 },
-  messageTime: { fontSize: Theme.fontSize.xs, color: Theme.colors.textMuted, marginLeft: 8 },
-  messagePreview: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary },
+  messageName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary, flex: 1 },
+  messageTime: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginLeft: 8 },
+  messagePreview: { fontSize: Theme.fontSize.sm, color: c.textSecondary },
   emptyState: { alignItems: 'center', paddingVertical: 60 },
-  emptyText: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, marginTop: Theme.spacing.md },
+  emptyText: { fontSize: Theme.fontSize.md, color: c.textSecondary, marginTop: Theme.spacing.md },
 });

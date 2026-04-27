@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import * as authService from '../services/auth.service';
 import { asyncHandler } from '../utils/asyncHandler';
+import { requireAuth, type AuthedRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -70,6 +71,24 @@ router.post(
     const schema = z.object({ refreshToken: z.string() });
     const body = schema.parse(req.body);
     const result = await authService.refresh(body.refreshToken);
+    res.json(result);
+  })
+);
+
+router.post(
+  '/change-password',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const schema = z.object({
+      currentPassword: z.string().min(1),
+      newPassword: z.string().min(8),
+    });
+    const body = schema.parse(req.body);
+    const result = await authService.changePassword(
+      (req as AuthedRequest).userId,
+      body.currentPassword,
+      body.newPassword
+    );
     res.json(result);
   })
 );

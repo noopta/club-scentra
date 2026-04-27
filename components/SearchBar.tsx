@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -10,6 +11,9 @@ interface SearchBarProps {
 }
 
 export default function SearchBar({ placeholder = 'Name, Event, Venue', value, onChangeText }: SearchBarProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
@@ -30,7 +34,7 @@ export default function SearchBar({ placeholder = 'Name, Event, Venue', value, o
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   container: {
     marginBottom: Theme.spacing.md,
   },
@@ -42,23 +46,23 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Theme.fontSize.xs,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginLeft: 4,
     letterSpacing: 1,
   },
   inputContainer: {
-    backgroundColor: Theme.colors.cardBackground,
+    backgroundColor: c.cardBackground,
     borderRadius: Theme.borderRadius.sm,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.md,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: c.border,
   },
   input: {
     flex: 1,
     fontSize: Theme.fontSize.md,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
 });

@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 export default function TermsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
 
   return (
@@ -72,10 +76,10 @@ export default function TermsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: c.background,
   },
   header: {
     flexDirection: 'row',
@@ -91,7 +95,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   headerSpacer: {
     width: 40,
@@ -102,19 +106,19 @@ const styles = StyleSheet.create({
   },
   lastUpdated: {
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textMuted,
+    color: c.textMuted,
     marginBottom: Theme.spacing.lg,
   },
   sectionTitle: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginTop: Theme.spacing.lg,
     marginBottom: Theme.spacing.sm,
   },
   bodyText: {
     fontSize: Theme.fontSize.md,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     lineHeight: 22,
   },
 });

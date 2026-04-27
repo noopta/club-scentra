@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import StoryRing from './StoryRing';
 
 interface EventCardProps {
@@ -16,6 +17,9 @@ interface EventCardProps {
 }
 
 export default function EventCard({ name, location, date, image, onPress, onImagePress, onAddToStory, variant = 'default' }: EventCardProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const isPopular = variant === 'popular';
   const isPast = variant === 'past';
   const isDark = variant === 'dark';
@@ -105,9 +109,9 @@ export default function EventCard({ name, location, date, image, onPress, onImag
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   card: {
-    backgroundColor: Theme.colors.cardBackground,
+    backgroundColor: c.cardBackground,
     borderRadius: 16,
     flexDirection: 'row',
     padding: 12,
@@ -115,7 +119,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   popularCard: {
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: c.primary,
   },
   darkCard: {
     backgroundColor: '#181921',
@@ -131,10 +135,10 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: '800',
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   lightName: {
-    color: Theme.colors.white,
+    color: c.white,
   },
   infoGroup: {},
   infoRow: {
@@ -144,11 +148,11 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 12,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     marginLeft: 5,
   },
   lightText: {
-    color: Theme.colors.white,
+    color: c.white,
   },
   image: {
     width: '100%',
@@ -169,7 +173,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   addStoryBtnOnLight: {
-    borderColor: Theme.colors.primary,
+    borderColor: c.primary,
     backgroundColor: '#FFF5F5',
   },
   addStoryBtnOnDark: {
@@ -181,9 +185,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   addStoryTextOnLight: {
-    color: Theme.colors.primary,
+    color: c.primary,
   },
   addStoryTextOnDark: {
-    color: Theme.colors.white,
+    color: c.white,
   },
 });

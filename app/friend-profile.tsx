@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import { users, social, PublicUser, Post } from '@/lib/api';
 import ProfileHeader from '@/components/ProfileHeader';
 import PhotoGrid from '@/components/PhotoGrid';
 import { messages as messagesApi } from '@/lib/api';
 
 export default function FriendProfileScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [profile, setProfile] = useState<PublicUser | null>(null);
@@ -143,15 +147,15 @@ export default function FriendProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   topBar: { paddingTop: Platform.OS === 'ios' ? 54 : 40, paddingHorizontal: Theme.spacing.md, paddingBottom: Theme.spacing.sm },
   backButton: { padding: Theme.spacing.sm, alignSelf: 'flex-start' },
   scrollContent: { paddingBottom: Theme.spacing.xl },
   buttonRow: { flexDirection: 'row', paddingHorizontal: Theme.spacing.md, gap: Theme.spacing.sm, marginBottom: Theme.spacing.lg },
-  followButton: { flex: 1, backgroundColor: Theme.colors.primary, borderRadius: Theme.borderRadius.sm, paddingVertical: 12, alignItems: 'center' },
+  followButton: { flex: 1, backgroundColor: c.primary, borderRadius: Theme.borderRadius.sm, paddingVertical: 12, alignItems: 'center' },
   followingButton: { backgroundColor: '#2F3137' },
-  followButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.white },
+  followButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.white },
   messageButton: { flex: 1, backgroundColor: '#2F3137', borderRadius: Theme.borderRadius.sm, paddingVertical: 12, alignItems: 'center' },
-  messageButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.white },
+  messageButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.white },
 });

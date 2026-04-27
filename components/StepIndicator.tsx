@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface StepIndicatorProps {
   totalSteps: number;
@@ -8,6 +9,9 @@ interface StepIndicatorProps {
 }
 
 export default function StepIndicator({ totalSteps, currentStep }: StepIndicatorProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       {Array.from({ length: totalSteps }).map((_, index) => (
@@ -23,7 +27,7 @@ export default function StepIndicator({ totalSteps, currentStep }: StepIndicator
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -37,9 +41,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: Theme.colors.textPrimary,
+    backgroundColor: c.textPrimary,
   },
   inactiveDot: {
-    backgroundColor: Theme.colors.border,
+    backgroundColor: c.border,
   },
 });

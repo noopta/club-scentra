@@ -106,6 +106,21 @@ constants/
 - **Combined address input** (`app/create-event-location.tsx`): single autocomplete field replaces the four separate address/city/region/postal inputs. Nominatim suggestions populate a hidden `resolved` object; "Next" requires picking a suggestion, then forwards `addressLine`, `city`, `region`, `postalCode` to step 3.
 - **Profile grid filter**: `Post.eventId?: string | null` added to `lib/api.ts`. `app/(tabs)/profile.tsx` filters out posts with an `eventId` before passing them to `PhotoGrid`. No-op until the backend persists/returns the field (server contract is in `docs/EVENT_STORIES_DESIGN_SPEC.md`).
 - **Settings rows** (`app/settings.tsx`):
-  - Change Password, Privacy, Help Center, Report a Problem, Privacy Policy → transient "Coming soon" banner at the top of the screen (auto-dismisses after ~2.8s).
-  - Delete Account → destructive Alert (or `window.confirm` on web) with explanation; "Delete" surfaces a "coming soon" banner (no destructive backend call).
-  - Toggles (push, email, dark mode, location) show an inline spinner while `users.updateSettings` is in flight, then a red "Saved" pill for ~1.8s. On API failure, the toggle reverts and the banner shows an error.
+  - Edit Profile, Change Password (`/change-password`), Privacy (`/privacy-settings`), Help Center (`/help`), Report a Problem (`/report-problem`), Terms (`/terms`), Privacy Policy (`/privacy-policy`) — all wired to real screens.
+  - Delete Account → confirmation dialog → calls `users.deleteMe()` then logs the user out. Surfaces server errors as a banner.
+  - Dark Mode toggle is wired to `useTheme().setMode`. Persists locally via `AsyncStorage` and remotely via `users.updateSettings({ darkMode })`.
+  - Push, Email, Location toggles still call `users.updateSettings` with optimistic UI + "Saved" pill or rollback on error.
+
+## Profile Picture & Dark Mode (Task #3)
+- **Profile picture upload** (`app/edit-profile.tsx`): "Change Photo" → `expo-image-picker` (with native permission prompt) → `uploads.uploadImage()` → `users.updateMe({ avatarUrl })` → `refreshUser()`. Local preview shown immediately, with an `ActivityIndicator` overlay while uploading. Cross-platform alerts via a `showAlert` helper (`window.alert` on web, `Alert.alert` on native).
+- **Dark mode infrastructure**:
+  - `constants/Theme.ts` exports `LightColors`, `DarkColors`, `ThemedColors`, plus a `Proxy` on `Theme.colors` so legacy module-level reads pick up the active palette.
+  - `lib/ThemeContext.tsx` — `ThemeProvider` + `useTheme()`. Loads saved mode from AsyncStorage (key `themeMode`) on mount, sets `isReady` when done. `setMode()` updates state, persists to AsyncStorage, and calls `users.updateSettings({ darkMode })` (best-effort).
+  - `app/_layout.tsx` wraps with `ThemeProvider`. `ThemedStack` gates render on `isReady` to prevent a light-mode flash for dark-mode users on cold start. The Stack's `screenOptions.contentStyle.backgroundColor` re-derives from the active palette without remounting (no nav-stack reset on toggle).
+- **Themified styles**: every Theme-using screen and component (38 files) follows the pattern `const styles = useMemo(() => makeStyles(colors), [colors])` with a module-level `const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({...})`. This was applied via `scripts/themify.js` plus manual rewrites for `components/TimePicker.tsx` (two factories) and `components/WizardHeader.tsx` (regex couldn't parse the default value with parens).
+- **New screens** (all themed via `useTheme()` + `makeStyles`):
+  - `app/change-password.tsx` — current/new/confirm fields, client-side rules (≥8 chars, uppercase, number/symbol, must differ from current), calls `auth.changePassword`. Surfaces backend errors inline. Backend route (`POST /auth/change-password`) is in `server/src/routes/auth.routes.ts` and `services/auth.service.ts` — pending deploy.
+  - `app/privacy-settings.tsx` — Private Profile + Show Activity toggles, audience pickers (Everyone / Friends of friends / No one) for friend requests and messages. Persists per-device via `AsyncStorage` under key `privacyPrefs` (backend Prisma model lacks these columns; AsyncStorage avoids a migration risk).
+  - `app/help.tsx` — collapsible FAQ in 5 sections (Getting started, Events & meets, Posts & stories, Friends & messaging, Account & privacy) plus a "Contact Support" mailto button.
+  - `app/report-problem.tsx` — category picker (Bug / Inappropriate content / Account issue / Other), description textarea (≥10 chars), opens the user's email client via `mailto:` with subject + body prefilled (reporter id, platform, version, description).
+- **API client extensions** (`lib/api.ts`): `auth.changePassword(currentPassword, newPassword)` and `users.deleteMe()`.

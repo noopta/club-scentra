@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import { events as eventsApi, Event } from '@/lib/api';
 import RedButton from '@/components/RedButton';
 
@@ -19,6 +20,9 @@ function formatDate(startAt: string, endAt?: string | null): string {
 }
 
 export default function EventDetailScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [event, setEvent] = useState<Event | null>(null);
@@ -183,29 +187,29 @@ export default function EventDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   imageContainer: { position: 'relative' },
   heroImage: { width: '100%', height: 250 },
   backButton: { position: 'absolute', top: 50, left: Theme.spacing.md, backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 20, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   content: { padding: Theme.spacing.lg },
-  eventName: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.md },
+  eventName: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.md },
   hostRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Theme.spacing.lg },
   hostAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: Theme.spacing.sm },
-  hostedBy: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary },
-  hostName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textPrimary },
-  detailsCard: { backgroundColor: Theme.colors.cardBackground, borderRadius: Theme.borderRadius.md, padding: Theme.spacing.md, marginBottom: Theme.spacing.lg },
+  hostedBy: { fontSize: Theme.fontSize.xs, color: c.textSecondary },
+  hostName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
+  detailsCard: { backgroundColor: c.cardBackground, borderRadius: Theme.borderRadius.md, padding: Theme.spacing.md, marginBottom: Theme.spacing.lg },
   detailRow: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: Theme.spacing.sm },
   detailTextContainer: { marginLeft: Theme.spacing.md, flex: 1 },
-  detailLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.medium },
-  detailValue: { fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary, fontWeight: Theme.fontWeight.medium, marginTop: 2 },
-  detailSubvalue: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, marginTop: 2 },
-  divider: { height: 1, backgroundColor: Theme.colors.divider },
-  sectionTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.sm },
-  description: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, lineHeight: 22, marginBottom: Theme.spacing.lg },
+  detailLabel: { fontSize: Theme.fontSize.xs, color: c.textSecondary, fontWeight: Theme.fontWeight.medium },
+  detailValue: { fontSize: Theme.fontSize.md, color: c.textPrimary, fontWeight: Theme.fontWeight.medium, marginTop: 2 },
+  detailSubvalue: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginTop: 2 },
+  divider: { height: 1, backgroundColor: c.divider },
+  sectionTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.sm },
+  description: { fontSize: Theme.fontSize.md, color: c.textSecondary, lineHeight: 22, marginBottom: Theme.spacing.lg },
   buttonRow: { marginBottom: Theme.spacing.sm },
-  interestedButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 2, borderColor: Theme.colors.textPrimary, borderRadius: Theme.borderRadius.lg, paddingVertical: 16, marginBottom: Theme.spacing.xl },
-  interestedButtonActive: { borderColor: Theme.colors.primary, backgroundColor: '#FFF5F5' },
-  interestedText: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
-  interestedTextActive: { color: Theme.colors.primary },
+  interestedButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 2, borderColor: c.textPrimary, borderRadius: Theme.borderRadius.lg, paddingVertical: 16, marginBottom: Theme.spacing.xl },
+  interestedButtonActive: { borderColor: c.primary, backgroundColor: '#FFF5F5' },
+  interestedText: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: c.textPrimary },
+  interestedTextActive: { color: c.primary },
 });

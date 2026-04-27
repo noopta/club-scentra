@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Image, ActivityIndicator, Platform,
@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import InputField from '@/components/InputField';
 import { useAuth } from '@/lib/AuthContext';
 import { useGoogleAuth } from '@/lib/useGoogleAuth';
@@ -15,6 +16,9 @@ const logo = require('@/assets/images/logo.png');
 const googleLogo = require('@/assets/images/google-logo.png');
 
 export default function LoginScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const { login, devLogin, googleLogin, appleLogin } = useAuth();
   const [identifier, setIdentifier] = useState('');
@@ -151,8 +155,8 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: 80, paddingBottom: Theme.spacing.xl },
   logoContainer: { alignItems: 'center', marginBottom: Theme.spacing.lg },
   logoClip: { width: 90, height: 72, overflow: 'hidden' },
@@ -161,7 +165,7 @@ const styles = StyleSheet.create({
     fontSize: Theme.fontSize.xxl,
     fontWeight: Theme.fontWeight.bold,
     fontStyle: 'italic',
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     textAlign: 'center',
     marginBottom: Theme.spacing.lg,
   },
@@ -173,9 +177,9 @@ const styles = StyleSheet.create({
     padding: Theme.spacing.md,
     marginBottom: Theme.spacing.md,
   },
-  errorText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, textAlign: 'center' },
+  errorText: { fontSize: Theme.fontSize.sm, color: c.primary, textAlign: 'center' },
   googleButton: {
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderRadius: Theme.borderRadius.xl,
     paddingVertical: 14,
     paddingHorizontal: Theme.spacing.lg,
@@ -196,38 +200,38 @@ const styles = StyleSheet.create({
   orText: {
     textAlign: 'center',
     fontSize: Theme.fontSize.md,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     marginBottom: Theme.spacing.lg,
     marginTop: Theme.spacing.sm,
   },
   loginButton: {
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderRadius: Theme.borderRadius.xl,
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: c.border,
     marginTop: Theme.spacing.md,
   },
-  loginButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary },
+  loginButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: c.textPrimary },
   signupButton: {
-    backgroundColor: Theme.colors.black,
+    backgroundColor: c.black,
     borderRadius: Theme.borderRadius.xl,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: Theme.spacing.md,
   },
-  signupButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.white },
+  signupButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: c.white },
   devButton: {
     marginTop: Theme.spacing.lg,
     paddingVertical: 10,
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: Theme.colors.border,
+    borderTopColor: c.border,
   },
   devButtonText: {
     fontSize: Theme.fontSize.xs,
-    color: Theme.colors.textMuted,
+    color: c.textMuted,
     fontStyle: 'italic',
   },
 });

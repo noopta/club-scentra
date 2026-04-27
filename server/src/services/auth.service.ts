@@ -197,3 +197,31 @@ export async function getUserById(userId: string) {
   if (!user) throw new HttpError(404, 'User not found');
   return serializeUser(user);
 }
+
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+) {
+  validatePasswordRules(newPassword);
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new HttpError(404, 'User not found');
+  if (!user.passwordHash) {
+    throw new HttpError(400, 'This account uses social sign-in and has no password to change');
+  }
+  const ok = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!ok) throw new HttpError(401, 'Current password is incorrect');
+  const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash: newHash },
+  });
+  return { ok: true };
+}
+
+export async function deleteAccount(userId: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new HttpError(404, 'User not found');
+  await prisma.user.delete({ where: { id: userId } });
+  return { ok: true };
+}

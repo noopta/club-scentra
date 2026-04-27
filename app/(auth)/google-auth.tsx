@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { useAuth } from '@/lib/AuthContext';
@@ -19,6 +20,9 @@ const discovery = {
 };
 
 export default function GoogleAuthScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -133,27 +137,27 @@ export default function GoogleAuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   backBtn: { position: 'absolute', top: 54, left: Theme.spacing.md, zIndex: 10, padding: Theme.spacing.sm },
   content: { flex: 1, paddingHorizontal: Theme.spacing.xl, paddingTop: 100, alignItems: 'center' },
-  googleLogoRow: { width: 60, height: 60, borderRadius: 30, backgroundColor: Theme.colors.white, alignItems: 'center', justifyContent: 'center', marginBottom: Theme.spacing.lg, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 4 },
+  googleLogoRow: { width: 60, height: 60, borderRadius: 30, backgroundColor: c.white, alignItems: 'center', justifyContent: 'center', marginBottom: Theme.spacing.lg, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 4 },
   googleG: { fontSize: 32, fontWeight: '700', color: '#4285F4' },
-  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.xs, textAlign: 'center' },
-  subtitle: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xl },
+  title: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.xs, textAlign: 'center' },
+  subtitle: { fontSize: Theme.fontSize.sm, color: c.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xl },
   googleButton: { width: '100%', backgroundColor: '#4285F4', borderRadius: Theme.borderRadius.xl, paddingVertical: 16, alignItems: 'center', marginBottom: Theme.spacing.md },
   buttonDisabled: { opacity: 0.6 },
-  googleButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.white },
-  emailButton: { width: '100%', backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.xl, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: Theme.colors.border, marginBottom: Theme.spacing.xl },
-  emailButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary },
-  disclaimer: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, textAlign: 'center', lineHeight: 18, marginBottom: Theme.spacing.sm },
+  googleButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.white },
+  emailButton: { width: '100%', backgroundColor: c.white, borderRadius: Theme.borderRadius.xl, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: c.border, marginBottom: Theme.spacing.xl },
+  emailButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: c.textPrimary },
+  disclaimer: { fontSize: Theme.fontSize.xs, color: c.textSecondary, textAlign: 'center', lineHeight: 18, marginBottom: Theme.spacing.sm },
   privacyRow: { flexDirection: 'row', alignItems: 'center' },
   privacyLink: { fontSize: Theme.fontSize.xs, color: '#4285F4' },
-  privacyDot: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary },
+  privacyDot: { fontSize: Theme.fontSize.xs, color: c.textSecondary },
   loadingContent: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Theme.spacing.xl },
   logoClip: { width: 90, height: 72, overflow: 'hidden', marginBottom: Theme.spacing.xl },
   logoImage: { width: 90, height: 90 },
   spinner: { marginBottom: Theme.spacing.lg },
-  loadingText: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.xs },
-  loadingSubtext: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, textAlign: 'center' },
+  loadingText: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.xs },
+  loadingSubtext: { fontSize: Theme.fontSize.sm, color: c.textSecondary, textAlign: 'center' },
 });

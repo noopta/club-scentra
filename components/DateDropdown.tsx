@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import FilterPill from './FilterPill';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -20,6 +21,9 @@ interface DateDropdownProps {
 }
 
 export default function DateDropdown({ selected, onSelect }: DateDropdownProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState('');
   const today = new Date();
@@ -157,14 +161,14 @@ export default function DateDropdown({ selected, onSelect }: DateDropdownProps) 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: Theme.spacing.lg,
@@ -175,20 +179,20 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Theme.colors.border,
+    backgroundColor: c.border,
     alignSelf: 'center',
     marginBottom: Theme.spacing.md,
   },
   title: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: Theme.spacing.md,
   },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.colors.background,
+    backgroundColor: c.background,
     borderRadius: Theme.borderRadius.sm,
     paddingHorizontal: Theme.spacing.md,
     paddingVertical: Theme.spacing.sm,
@@ -198,17 +202,17 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: Theme.fontSize.md,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   searchApply: {
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: c.primary,
     borderRadius: Theme.borderRadius.sm,
     paddingVertical: 10,
     alignItems: 'center',
     marginBottom: Theme.spacing.md,
   },
   searchApplyText: {
-    color: Theme.colors.white,
+    color: c.white,
     fontWeight: Theme.fontWeight.medium,
     fontSize: Theme.fontSize.sm,
   },
@@ -225,7 +229,7 @@ const styles = StyleSheet.create({
   monthLabel: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   dayRow: {
     flexDirection: 'row',
@@ -239,7 +243,7 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontSize: Theme.fontSize.xs,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     fontWeight: Theme.fontWeight.semibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -260,23 +264,23 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   cellSelected: {
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: c.primary,
   },
   cellToday: {
     borderWidth: 1.5,
-    borderColor: Theme.colors.primary,
+    borderColor: c.primary,
   },
   cellText: {
     fontSize: Theme.fontSize.md,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     fontWeight: Theme.fontWeight.medium,
   },
   cellTextSelected: {
-    color: Theme.colors.white,
+    color: c.white,
     fontWeight: Theme.fontWeight.bold,
   },
   cellTextToday: {
-    color: Theme.colors.primary,
+    color: c.primary,
     fontWeight: Theme.fontWeight.bold,
   },
   clearBtn: {
@@ -285,7 +289,7 @@ const styles = StyleSheet.create({
   },
   clearText: {
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.primary,
+    color: c.primary,
     fontWeight: Theme.fontWeight.semibold,
   },
 });

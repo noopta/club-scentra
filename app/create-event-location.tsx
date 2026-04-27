@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, TextInput, Platform, KeyboardAvoidingView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import StepIndicator from '@/components/StepIndicator';
 import InputField from '@/components/InputField';
 import RedButton from '@/components/RedButton';
@@ -23,6 +24,9 @@ function formatCombined(s: { address: string; city: string; region: string; post
 }
 
 export default function CreateEventLocationScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const params = useLocalSearchParams<{ title: string; description: string }>();
 
@@ -198,19 +202,19 @@ export default function CreateEventLocationScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.lg, paddingBottom: Theme.spacing.xxl, gap: Theme.spacing.sm },
-  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginTop: Theme.spacing.md, marginBottom: Theme.spacing.xs },
-  subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.md },
+  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, textAlign: 'center', marginTop: Theme.spacing.md, marginBottom: Theme.spacing.xs },
+  subtitle: { fontSize: Theme.fontSize.md, color: c.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.md },
   errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md },
-  errorText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, textAlign: 'center' },
+  errorText: { fontSize: Theme.fontSize.sm, color: c.primary, textAlign: 'center' },
   searchWrapper: { zIndex: 10, marginBottom: Theme.spacing.sm },
-  inputLabel: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary, marginBottom: 6 },
+  inputLabel: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: c.textPrimary, marginBottom: 6 },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.colors.inputBackground,
+    backgroundColor: c.inputBackground,
     borderRadius: Theme.borderRadius.sm,
     borderWidth: 1,
     borderColor: 'transparent',
@@ -219,32 +223,32 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   searchRowResolved: {
-    borderColor: Theme.colors.primary,
+    borderColor: c.primary,
     backgroundColor: '#FFF5F5',
   },
   searchIcon: {},
   searchInput: {
     flex: 1,
     fontSize: Theme.fontSize.md,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     paddingVertical: Platform.OS === 'android' ? 8 : 0,
   },
   searchSpinner: {},
   clearBtn: {},
   helperText: {
     fontSize: Theme.fontSize.xs,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     marginTop: 6,
     marginLeft: 4,
   },
   suggestionsBox: {
-    backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.md,
-    borderWidth: 1, borderColor: Theme.colors.border, overflow: 'hidden',
+    backgroundColor: c.white, borderRadius: Theme.borderRadius.md,
+    borderWidth: 1, borderColor: c.border, overflow: 'hidden',
     marginTop: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1, shadowRadius: 8, elevation: 5,
   },
   suggestion: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: Theme.spacing.md, paddingVertical: 12 },
-  suggestionBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.border },
-  suggestionMain: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary },
-  suggestionSub: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, marginTop: 2 },
+  suggestionBorder: { borderBottomWidth: 1, borderBottomColor: c.border },
+  suggestionMain: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: c.textPrimary },
+  suggestionSub: { fontSize: Theme.fontSize.xs, color: c.textSecondary, marginTop: 2 },
 });

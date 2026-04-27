@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface ProfileHeaderProps {
   username: string;
@@ -25,6 +26,9 @@ export default function ProfileHeader({
   car,
   location,
 }: ProfileHeaderProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.username}>@{username}</Text>
@@ -59,7 +63,7 @@ export default function ProfileHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   container: {
     alignItems: 'center',
     paddingVertical: Theme.spacing.md,
@@ -67,7 +71,7 @@ const styles = StyleSheet.create({
   username: {
     fontSize: Theme.fontSize.xl,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: Theme.spacing.md,
   },
   avatarContainer: {
@@ -75,7 +79,7 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: Theme.borderRadius.md,
     borderWidth: 3,
-    borderColor: Theme.colors.primary,
+    borderColor: c.primary,
     overflow: 'hidden',
     marginBottom: Theme.spacing.sm,
   },
@@ -86,7 +90,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginBottom: Theme.spacing.sm,
   },
   statsRow: {
@@ -101,20 +105,20 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   statLabel: {
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
   },
   infoText: {
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginTop: 2,
   },
   bio: {
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginTop: Theme.spacing.xs,
     textAlign: 'center',
   },

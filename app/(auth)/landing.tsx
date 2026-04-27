@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 const logo = require('@/assets/images/logo.png');
 
 export default function LandingScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
 
   return (
@@ -35,10 +39,10 @@ export default function LandingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: c.background,
     justifyContent: 'space-between',
     paddingHorizontal: Theme.spacing.xl,
     paddingTop: 120,
@@ -57,20 +61,20 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.md,
   },
   loginButton: {
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderRadius: Theme.borderRadius.xl,
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: c.border,
   },
   loginButtonText: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   signupButton: {
-    backgroundColor: Theme.colors.black,
+    backgroundColor: c.black,
     borderRadius: Theme.borderRadius.xl,
     paddingVertical: 16,
     alignItems: 'center',
@@ -78,6 +82,6 @@ const styles = StyleSheet.create({
   signupButtonText: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.white,
+    color: c.white,
   },
 });

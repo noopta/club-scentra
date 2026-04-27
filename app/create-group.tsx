@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 const CONTACTS = [
   { id: '1', username: 'LukeH', name: 'Luke Homes', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' },
@@ -14,6 +15,9 @@ const CONTACTS = [
 ];
 
 export default function CreateGroupScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const [groupName, setGroupName] = useState('');
   const [search, setSearch] = useState('');
@@ -119,10 +123,10 @@ export default function CreateGroupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: c.background,
   },
   header: {
     flexDirection: 'row',
@@ -131,62 +135,62 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 54 : 40,
     paddingHorizontal: Theme.spacing.md,
     paddingBottom: Theme.spacing.md,
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
+    borderBottomColor: c.border,
   },
   backBtn: { padding: Theme.spacing.sm },
   headerTitle: {
     fontSize: Theme.fontSize.lg,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   createBtn: {
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: c.primary,
     borderRadius: Theme.borderRadius.xl,
     paddingHorizontal: Theme.spacing.md,
     paddingVertical: 8,
   },
   createBtnDisabled: {
-    backgroundColor: Theme.colors.border,
+    backgroundColor: c.border,
   },
   createBtnText: {
-    color: Theme.colors.white,
+    color: c.white,
     fontWeight: Theme.fontWeight.bold,
     fontSize: Theme.fontSize.sm,
   },
   createBtnTextDisabled: {
-    color: Theme.colors.textMuted,
+    color: c.textMuted,
   },
   groupNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Theme.spacing.lg,
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
+    borderBottomColor: c.border,
     gap: Theme.spacing.md,
   },
   groupIconPlaceholder: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   groupNameInput: {
     flex: 1,
     fontSize: Theme.fontSize.lg,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
+    borderBottomColor: c.border,
     paddingBottom: 6,
   },
   selectedRow: {
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
+    borderBottomColor: c.border,
     maxHeight: 80,
   },
   selectedRowContent: {
@@ -204,31 +208,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     gap: 6,
     borderWidth: 1,
-    borderColor: Theme.colors.primary,
+    borderColor: c.primary,
   },
   chipAvatar: { width: 24, height: 24, borderRadius: 12 },
-  chipName: { fontSize: Theme.fontSize.xs, color: Theme.colors.primary, fontWeight: Theme.fontWeight.medium },
+  chipName: { fontSize: Theme.fontSize.xs, color: c.primary, fontWeight: Theme.fontWeight.medium },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     margin: Theme.spacing.md,
     borderRadius: Theme.borderRadius.sm,
     paddingHorizontal: Theme.spacing.md,
     paddingVertical: Theme.spacing.sm,
     gap: Theme.spacing.sm,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: c.border,
   },
   searchInput: {
     flex: 1,
     fontSize: Theme.fontSize.md,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
   },
   sectionLabel: {
     fontSize: Theme.fontSize.sm,
     fontWeight: Theme.fontWeight.medium,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     paddingHorizontal: Theme.spacing.lg,
     paddingBottom: Theme.spacing.sm,
   },
@@ -237,25 +241,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.lg,
     paddingVertical: Theme.spacing.md,
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border,
+    borderBottomColor: c.border,
   },
   contactAvatar: { width: 46, height: 46, borderRadius: 23, marginRight: Theme.spacing.md },
   contactInfo: { flex: 1 },
-  contactName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary },
-  contactUsername: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, marginTop: 2 },
+  contactName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: c.textPrimary },
+  contactUsername: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginTop: 2 },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Theme.colors.border,
+    borderColor: c.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxSelected: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
+    backgroundColor: c.primary,
+    borderColor: c.primary,
   },
 });

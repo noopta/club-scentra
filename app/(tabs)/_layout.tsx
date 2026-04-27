@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { Tabs } from 'expo-router';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import { Platform, Image, StyleSheet } from 'react-native';
 
 const exploreIcon = require('@/assets/images/icons/explore.png');
@@ -11,6 +13,9 @@ const profileIcon = require('@/assets/images/icons/profile.png');
 const TAB_BAR_BG = '#181921';
 
 export default function TabLayout() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <Tabs
       screenOptions={{
@@ -105,7 +110,7 @@ export default function TabLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   tabIcon: {
     width: 26,
     height: 26,

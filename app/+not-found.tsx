@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 export default function NotFoundScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
 
   return (
@@ -26,10 +30,10 @@ export default function NotFoundScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: Theme.spacing.xl,
@@ -37,24 +41,24 @@ const styles = StyleSheet.create({
   errorCode: {
     fontSize: 72,
     fontWeight: Theme.fontWeight.extrabold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginTop: Theme.spacing.md,
   },
   title: {
     fontSize: Theme.fontSize.xxl,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
+    color: c.textPrimary,
     marginTop: Theme.spacing.sm,
   },
   subtitle: {
     fontSize: Theme.fontSize.md,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     textAlign: 'center',
     marginTop: Theme.spacing.sm,
     marginBottom: Theme.spacing.xl,
   },
   button: {
-    backgroundColor: Theme.colors.primary,
+    backgroundColor: c.primary,
     borderRadius: Theme.borderRadius.xl,
     paddingVertical: 16,
     paddingHorizontal: Theme.spacing.xxl,
@@ -62,6 +66,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.white,
+    color: c.white,
   },
 });

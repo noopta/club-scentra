@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import FilterPill from './FilterPill';
 
 const ALL_LOCATIONS = [
@@ -25,6 +26,9 @@ interface LocationDropdownProps {
 }
 
 export default function LocationDropdown({ selected, onSelect }: LocationDropdownProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -103,14 +107,14 @@ export default function LocationDropdown({ selected, onSelect }: LocationDropdow
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: Theme.spacing.lg,
@@ -118,12 +122,12 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     maxHeight: '75%',
   },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Theme.colors.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
-  title: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.md },
-  searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.colors.background, borderRadius: Theme.borderRadius.sm, paddingHorizontal: Theme.spacing.md, paddingVertical: Theme.spacing.sm, marginBottom: Theme.spacing.md, gap: Theme.spacing.sm },
-  searchInput: { flex: 1, fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary },
-  option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Theme.colors.border },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: c.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
+  title: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.md },
+  searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: c.background, borderRadius: Theme.borderRadius.sm, paddingHorizontal: Theme.spacing.md, paddingVertical: Theme.spacing.sm, marginBottom: Theme.spacing.md, gap: Theme.spacing.sm },
+  searchInput: { flex: 1, fontSize: Theme.fontSize.md, color: c.textPrimary },
+  option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: c.border },
   optionLeft: { flexDirection: 'row', alignItems: 'center', gap: Theme.spacing.md },
-  optionText: { fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary },
-  emptyText: { textAlign: 'center', color: Theme.colors.textSecondary, marginTop: Theme.spacing.xl },
+  optionText: { fontSize: Theme.fontSize.md, color: c.textPrimary },
+  emptyText: { textAlign: 'center', color: c.textSecondary, marginTop: Theme.spacing.xl },
 });

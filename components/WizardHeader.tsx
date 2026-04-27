@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface WizardHeaderProps {
   title?: string;
@@ -12,6 +13,8 @@ interface WizardHeaderProps {
 }
 
 export default function WizardHeader({ title, cancelTo = '/(tabs)/event', onCancelConfirm, backBehavesAsCancel = false }: WizardHeaderProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
 
   const performCancel = () => {
@@ -50,7 +53,7 @@ export default function WizardHeader({ title, cancelTo = '/(tabs)/event', onCanc
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleBack} style={styles.iconBtn} hitSlop={10} activeOpacity={0.7}>
-        <Ionicons name="arrow-back" size={24} color={Theme.colors.textPrimary} />
+        <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
       </TouchableOpacity>
       <Text style={styles.title} numberOfLines={1}>{title ?? ''}</Text>
       <TouchableOpacity onPress={handleCancel} style={styles.cancelBtn} hitSlop={10} activeOpacity={0.7}>
@@ -60,7 +63,7 @@ export default function WizardHeader({ title, cancelTo = '/(tabs)/event', onCanc
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -80,7 +83,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     textAlign: 'center',
   },
   cancelBtn: {
@@ -93,6 +96,6 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.primary,
+    color: c.primary,
   },
 });

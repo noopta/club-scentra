@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Text, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface FilterPillProps {
   icon: keyof typeof import('@expo/vector-icons/build/Ionicons').default.glyphMap;
@@ -12,6 +13,9 @@ interface FilterPillProps {
 }
 
 export default function FilterPill({ icon, placeholder, value, onPress, onClear }: FilterPillProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const isActive = !!value;
   return (
     <TouchableOpacity
@@ -43,32 +47,32 @@ export default function FilterPill({ icon, placeholder, value, onPress, onClear 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   pill: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     borderRadius: 22,
     paddingHorizontal: 14,
     paddingVertical: 10,
     minHeight: 44,
     gap: 8,
     borderWidth: 1,
-    borderColor: Theme.colors.border,
+    borderColor: c.border,
   },
   pillActive: {
-    borderColor: Theme.colors.primary,
+    borderColor: c.primary,
     backgroundColor: '#FFF5F5',
   },
   text: {
     flex: 1,
     fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textSecondary,
+    color: c.textSecondary,
     fontWeight: Theme.fontWeight.medium,
   },
   textActive: {
-    color: Theme.colors.primary,
+    color: c.primary,
     fontWeight: Theme.fontWeight.semibold,
   },
   chevronWrap: {
@@ -80,7 +84,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: Theme.colors.white,
+    backgroundColor: c.white,
     alignItems: 'center',
     justifyContent: 'center',
   },

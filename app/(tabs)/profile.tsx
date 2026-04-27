@@ -1,14 +1,18 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Platform, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import { useTheme } from '@/lib/ThemeContext';
 import { social, Post } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import ProfileHeader from '@/components/ProfileHeader';
 import PhotoGrid from '@/components/PhotoGrid';
 
 export default function ProfileScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const router = useRouter();
   const { user, refreshUser } = useAuth();
   const [postModalVisible, setPostModalVisible] = useState(false);
@@ -129,26 +133,26 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   topBar: { paddingTop: Platform.OS === 'ios' ? 54 : 40, paddingHorizontal: Theme.spacing.md, paddingBottom: Theme.spacing.sm, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  plusButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: Theme.colors.white, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Theme.colors.border },
+  plusButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: c.white, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: c.border },
   settingsButton: { padding: Theme.spacing.sm },
   scrollContent: { paddingBottom: Theme.spacing.xl },
   buttonRow: { flexDirection: 'row', paddingHorizontal: Theme.spacing.md, gap: Theme.spacing.sm, marginBottom: Theme.spacing.lg },
   editButton: { flex: 1, backgroundColor: '#2F3137', borderRadius: Theme.borderRadius.sm, paddingVertical: 12, alignItems: 'center' },
-  editButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.white },
+  editButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.white },
   shareButton: { flex: 1, backgroundColor: '#2F3137', borderRadius: Theme.borderRadius.sm, paddingVertical: 12, alignItems: 'center' },
-  shareButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.white },
+  shareButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.white },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: Theme.colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40 },
-  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Theme.colors.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
-  modalTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.lg },
-  modalOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: Theme.spacing.md, borderBottomWidth: 1, borderBottomColor: Theme.colors.border },
-  modalIconWrap: { width: 48, height: 48, borderRadius: 12, backgroundColor: Theme.colors.background, alignItems: 'center', justifyContent: 'center', marginRight: Theme.spacing.md },
+  modalSheet: { backgroundColor: c.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40 },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: c.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
+  modalTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.lg },
+  modalOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: Theme.spacing.md, borderBottomWidth: 1, borderBottomColor: c.border },
+  modalIconWrap: { width: 48, height: 48, borderRadius: 12, backgroundColor: c.background, alignItems: 'center', justifyContent: 'center', marginRight: Theme.spacing.md },
   modalOptionText: { flex: 1 },
-  modalOptionTitle: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textPrimary },
-  modalOptionSub: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, marginTop: 2 },
-  cancelButton: { marginTop: Theme.spacing.lg, backgroundColor: Theme.colors.background, borderRadius: Theme.borderRadius.xl, paddingVertical: 14, alignItems: 'center' },
-  cancelText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textPrimary },
+  modalOptionTitle: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
+  modalOptionSub: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginTop: 2 },
+  cancelButton: { marginTop: Theme.spacing.lg, backgroundColor: c.background, borderRadius: Theme.borderRadius.xl, paddingVertical: 14, alignItems: 'center' },
+  cancelText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
 });
