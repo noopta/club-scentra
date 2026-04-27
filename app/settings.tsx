@@ -136,7 +136,7 @@ export default function SettingsScreen() {
       router.replace('/(auth)/landing');
     } catch (err: unknown) {
       setDeleting(false);
-      const msg = err instanceof Error ? err.message : 'Could not delete account';
+      const msg = err instanceof Error ? err.message : 'Couldn\'t delete account. Please try again.';
       showBanner(msg, 'error');
     }
   };
@@ -148,7 +148,7 @@ export default function SettingsScreen() {
       const ok = typeof window !== 'undefined' && window.confirm
         ? window.confirm(`Delete account?\n\n${message}`)
         : false;
-      if (ok) performDelete();
+      if (ok) void performDelete();
       return;
     }
     Alert.alert(
@@ -156,7 +156,11 @@ export default function SettingsScreen() {
       message,
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: performDelete },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => void performDelete(),
+        },
       ]
     );
   };
@@ -247,7 +251,7 @@ export default function SettingsScreen() {
 
         <Text style={styles.sectionTitle}>Support</Text>
         <View style={styles.sectionCard}>
-          <SettingsRow icon="help-circle-outline" label="Help Center" onPress={() => router.push('/help')} />
+          <SettingsRow icon="help-circle-outline" label="Help Center" onPress={() => router.push('/help-center')} />
           <SettingsRow icon="alert-circle-outline" label="Report a Problem" onPress={() => router.push('/report-problem')} />
           <SettingsRow icon="document-text-outline" label="Terms of Service" onPress={() => router.push('/terms')} />
           <SettingsRow icon="eye-outline" label="Privacy Policy" onPress={() => router.push('/privacy-policy')} isLast />

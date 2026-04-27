@@ -169,6 +169,10 @@ function serializeUser(
       emailNotifications: boolean;
       darkMode: boolean;
       locationServices: boolean;
+      privateProfile: boolean;
+      allowFriendRequests: boolean;
+      allowDirectMessages: boolean;
+      showLocationOnProfile: boolean;
     } | null;
   }
 ) {
@@ -185,8 +189,36 @@ function serializeUser(
       emailNotifications: false,
       darkMode: false,
       locationServices: true,
+      privateProfile: false,
+      allowFriendRequests: true,
+      allowDirectMessages: true,
+      showLocationOnProfile: true,
     },
   };
+}
+
+export async function changePassword(
+  userId: string,
+  input: { currentPassword?: string; newPassword: string }
+) {
+  validatePasswordRules(input.newPassword);
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new HttpError(404, 'User not found');
+
+  if (user.passwordHash) {
+    if (!input.currentPassword) {
+      throw new HttpError(400, 'Current password is required');
+    }
+    const ok = await bcrypt.compare(input.currentPassword, user.passwordHash);
+    if (!ok) throw new HttpError(401, 'Current password is incorrect');
+  }
+
+  const newHash = await bcrypt.hash(input.newPassword, SALT_ROUNDS);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash: newHash },
+  });
+  return { ok: true };
 }
 
 export async function getUserById(userId: string) {

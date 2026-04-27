@@ -58,11 +58,15 @@ model User {
 }
 
 model UserSettings {
-  userId             String  @id
-  pushNotifications  Boolean @default(true)
-  emailNotifications Boolean @default(false)
-  darkMode           Boolean @default(false)
-  locationServices   Boolean @default(true)
+  userId                String  @id
+  pushNotifications     Boolean @default(true)
+  emailNotifications    Boolean @default(false)
+  darkMode              Boolean @default(false)
+  locationServices      Boolean @default(true)
+  privateProfile        Boolean @default(false)
+  allowFriendRequests   Boolean @default(true)
+  allowDirectMessages   Boolean @default(true)
+  showLocationOnProfile Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

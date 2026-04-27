@@ -36,6 +36,10 @@ export async function updateSettings(
     emailNotifications: boolean;
     darkMode: boolean;
     locationServices: boolean;
+    privateProfile: boolean;
+    allowFriendRequests: boolean;
+    allowDirectMessages: boolean;
+    showLocationOnProfile: boolean;
   }>
 ) {
   await prisma.userSettings.upsert({
@@ -45,6 +49,13 @@ export async function updateSettings(
   });
   const settings = await prisma.userSettings.findUnique({ where: { userId } });
   return settings!;
+}
+
+export async function deleteAccount(userId: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new HttpError(404, 'User not found');
+  await prisma.user.delete({ where: { id: userId } });
+  return { ok: true };
 }
 
 export async function getPublicProfile(userId: string, viewerId?: string) {
@@ -99,6 +110,10 @@ function serializeUserPublic(user: {
     emailNotifications: boolean;
     darkMode: boolean;
     locationServices: boolean;
+    privateProfile: boolean;
+    allowFriendRequests: boolean;
+    allowDirectMessages: boolean;
+    showLocationOnProfile: boolean;
   } | null;
 }) {
   return {
@@ -114,6 +129,10 @@ function serializeUserPublic(user: {
       emailNotifications: false,
       darkMode: false,
       locationServices: true,
+      privateProfile: false,
+      allowFriendRequests: true,
+      allowDirectMessages: true,
+      showLocationOnProfile: true,
     },
   };
 }

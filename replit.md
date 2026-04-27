@@ -86,6 +86,14 @@ constants/
 - **Backend is live**: `https://api.airthreads.ai:4014/api` (Express + Prisma + PostgreSQL on EC2)
 - API client in `lib/api.ts` covers auth, events, meets, friends, messages, social, uploads
 
+## Settings (real flows, no more "Coming soon")
+- `app/change-password.tsx` — current/new/confirm fields, calls `auth.changePassword` (POST `/api/auth/change-password`). Users with no password (Google/Apple) can leave current blank to set an initial one.
+- `app/privacy-settings.tsx` — toggles for `privateProfile`, `allowFriendRequests`, `allowDirectMessages`, `showLocationOnProfile` saved via `users.updateSettings`. New columns added to `UserSettings` (migration `1_privacy_settings`).
+- `app/help-center.tsx` — FAQ accordion + Email Support (mailto:support@clubscentra.com) + Visit Help Site (https://clubscentra.com/help) + link to Report a Problem.
+- `app/report-problem.tsx` — category chips + description, opens prefilled `mailto` email with category/account info attached.
+- `app/privacy-policy.tsx` — already existed; now linked from Settings (also registered in root Stack).
+- Delete Account in Settings calls `users.deleteMe` → `DELETE /api/users/me`, then logs out and redirects to landing. Cascade delete in Prisma removes events/posts/messages.
+
 ## Event Stories Feature (live)
 - **Story rings** wrap every event card on Explore + Meets via `components/StoryRing.tsx`
 - **Viewer**: `app/stories.tsx` — fullscreen, 5-sec auto-advance, tap-zones for nav

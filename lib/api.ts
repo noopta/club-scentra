@@ -121,6 +121,10 @@ export type UserSettings = {
   emailNotifications: boolean;
   darkMode: boolean;
   locationServices: boolean;
+  privateProfile: boolean;
+  allowFriendRequests: boolean;
+  allowDirectMessages: boolean;
+  showLocationOnProfile: boolean;
 };
 
 export type Event = {
@@ -182,10 +186,10 @@ export const auth = {
   google: (idToken: string) =>
     request<AuthResponse>('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
 
-  changePassword: (currentPassword: string, newPassword: string) =>
+  changePassword: (data: { currentPassword?: string; newPassword: string }) =>
     request<{ ok: boolean }>('/auth/change-password', {
       method: 'POST',
-      body: JSON.stringify({ currentPassword, newPassword }),
+      body: JSON.stringify(data),
     }),
 
   apple: async (identityToken: string, email: string | null, fullName: string | null): Promise<AuthResponse> => {
@@ -213,11 +217,11 @@ export const users = {
   updateSettings: (data: Partial<UserSettings>) =>
     request<UserSettings>('/users/me/settings', { method: 'PATCH', body: JSON.stringify(data) }),
 
+  deleteMe: () => request<{ ok: boolean }>('/users/me', { method: 'DELETE' }),
+
   getById: (id: string) => request<PublicUser>(`/users/${id}`),
 
   search: (q: string) => request<PublicUser[]>(`/users/search?q=${encodeURIComponent(q)}`),
-
-  deleteMe: () => request<void>('/users/me', { method: 'DELETE' }),
 };
 
 export const events = {

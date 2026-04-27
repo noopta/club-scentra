@@ -62,10 +62,23 @@ router.patch(
       emailNotifications: z.boolean().optional(),
       darkMode: z.boolean().optional(),
       locationServices: z.boolean().optional(),
+      privateProfile: z.boolean().optional(),
+      allowFriendRequests: z.boolean().optional(),
+      allowDirectMessages: z.boolean().optional(),
+      showLocationOnProfile: z.boolean().optional(),
     });
     const body = schema.parse(req.body);
     const settings = await usersService.updateSettings((req as AuthedRequest).userId, body);
     res.json(settings);
+  })
+);
+
+router.delete(
+  '/me',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const result = await usersService.deleteAccount((req as AuthedRequest).userId);
+    res.json(result);
   })
 );
 

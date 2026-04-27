@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
@@ -7,45 +7,61 @@ import { useTheme } from '@/lib/ThemeContext';
 import InputField from '@/components/InputField';
 import RedButton from '@/components/RedButton';
 import { auth } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function ChangePasswordScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
-  const [current, setCurrent] = useState('');
-  const [next, setNext] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const { user } = useAuth();
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const validate = (): string | null => {
-    if (!current) return 'Enter your current password.';
-    if (next.length < 8) return 'New password must be at least 8 characters.';
-    if (!/[A-Z]/.test(next)) return 'New password must include an uppercase letter.';
-    if (!/[0-9!@#$%^&*(),.?":{}|<>]/.test(next)) return 'New password must include a number or symbol.';
-    if (next !== confirm) return 'Passwords do not match.';
-    if (next === current) return 'New password must be different from your current password.';
-    return null;
+  const showError = (msg: string) => {
+    setError(msg);
+    if (Platform.OS !== 'web') {
+      Alert.alert('Could not change password', msg);
+    }
   };
 
-  const handleSubmit = async () => {
-    const err = validate();
-    if (err) { setError(err); return; }
+  const handleSave = async () => {
     setError(null);
-    setSubmitting(true);
+    if (newPassword.length < 8) {
+      showError('New password must be at least 8 characters.');
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      showError('New password must include an uppercase letter.');
+      return;
+    }
+    if (!/[0-9!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
+      showError('New password must include a number or symbol.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showError('New passwords do not match.');
+      return;
+    }
+    setLoading(true);
     try {
-      await auth.changePassword(current, next);
-      const successMsg = 'Password updated successfully.';
+      await auth.changePassword({
+        currentPassword: currentPassword || undefined,
+        newPassword,
+      });
       if (Platform.OS === 'web') {
-        if (typeof window !== 'undefined') window.alert(successMsg);
+        router.back();
       } else {
-        Alert.alert('Done', successMsg);
+        Alert.alert('Password updated', 'Your password has been changed.', [
+          { text: 'OK', onPress: () => router.back() },
+        ]);
       }
-      router.back();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Could not change password.');
+    } catch (err: unknown) {
+      showError(err instanceof Error ? err.message : 'Could not change password');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -59,33 +75,72 @@ export default function ChangePasswordScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <Text style={styles.intro}>For your security, please enter your current password before choosing a new one.</Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.intro}>
+            Choose a strong password with at least 8 characters, an uppercase letter, and a number or symbol.
+          </Text>
 
-        <InputField label="Current password" value={current} onChangeText={setCurrent} secureTextEntry autoCapitalize="none" />
-        <InputField label="New password" value={next} onChangeText={setNext} secureTextEntry autoCapitalize="none" />
-        <InputField label="Confirm new password" value={confirm} onChangeText={setConfirm} secureTextEntry autoCapitalize="none" />
+          {user?.email ? (
+            <Text style={styles.accountLine}>Account: {user.email}</Text>
+          ) : null}
 
-        <View style={styles.rules}>
-          <Text style={styles.rulesTitle}>Password requirements</Text>
-          <Text style={styles.rule}>• At least 8 characters</Text>
-          <Text style={styles.rule}>• At least one uppercase letter</Text>
-          <Text style={styles.rule}>• At least one number or symbol</Text>
-        </View>
+          <InputField
+            label="Current Password"
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            autoComplete="current-password"
+            placeholder="Leave blank if you signed up with Google/Apple"
+          />
 
-        {error && (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={16} color={colors.danger} />
-            <Text style={styles.errorText}>{error}</Text>
+          <InputField
+            label="New Password"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            autoComplete="new-password"
+          />
+
+          <InputField
+            label="Confirm New Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            autoComplete="new-password"
+          />
+
+          <View style={styles.rules}>
+            <Text style={styles.rulesTitle}>Password requirements</Text>
+            <Text style={styles.rule}>• At least 8 characters</Text>
+            <Text style={styles.rule}>• At least one uppercase letter</Text>
+            <Text style={styles.rule}>• At least one number or symbol</Text>
           </View>
-        )}
 
-        {submitting ? (
-          <ActivityIndicator color={colors.primary} style={{ marginTop: 16 }} />
-        ) : (
-          <RedButton title="Update Password" onPress={handleSubmit} />
-        )}
-      </ScrollView>
+          {error ? (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle" size={16} color={colors.danger} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          {loading ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: 16 }} />
+          ) : (
+            <RedButton title="Update Password" onPress={handleSave} />
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -98,6 +153,7 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   headerSpacer: { width: 40 },
   scrollContent: { paddingHorizontal: Theme.spacing.lg, paddingBottom: Theme.spacing.xxl },
   intro: { color: c.textSecondary, fontSize: Theme.fontSize.sm, marginBottom: Theme.spacing.md, lineHeight: 20 },
+  accountLine: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginBottom: Theme.spacing.md },
   rules: { backgroundColor: c.cardBackground, borderRadius: Theme.borderRadius.md, padding: Theme.spacing.md, marginTop: Theme.spacing.sm, marginBottom: Theme.spacing.md },
   rulesTitle: { color: c.textPrimary, fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold, marginBottom: 6 },
   rule: { color: c.textSecondary, fontSize: Theme.fontSize.sm, lineHeight: 20 },

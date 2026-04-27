@@ -66,6 +66,20 @@ router.post(
 );
 
 router.post(
+  '/change-password',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const schema = z.object({
+      currentPassword: z.string().optional(),
+      newPassword: z.string().min(8),
+    });
+    const body = schema.parse(req.body);
+    const result = await authService.changePassword((req as AuthedRequest).userId, body);
+    res.json(result);
+  })
+);
+
+router.post(
   '/refresh',
   asyncHandler(async (req, res) => {
     const schema = z.object({ refreshToken: z.string() });

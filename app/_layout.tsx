@@ -32,6 +32,7 @@ function ThemedStack() {
         <Stack.Screen name="change-password" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="privacy-settings" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="help" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="help-center" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="report-problem" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="chat" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="create-group" options={{ animation: 'slide_from_bottom' }} />
