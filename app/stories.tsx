@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, Image, TouchableOpacity, TouchableWithoutFeedback,
   Dimensions, Animated, ActivityIndicator, StatusBar, Platform,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { events as eventsApi, EventPost } from '@/lib/api';
 
@@ -37,6 +37,7 @@ export default function StoriesScreen() {
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [isFocused, setIsFocused] = useState(true);
   const progress = useRef(new Animated.Value(0)).current;
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
 
@@ -71,7 +72,17 @@ export default function StoriesScreen() {
       }
     })();
     return () => { cancelled = true; };
-  }, [params.eventId]);
+  }, [params.eventId, params.eventImage, params.eventTitle]);
+
+  // Pause the entire story timer (animation, auto-advance, end-of-queue
+  // router.back) whenever the viewer is not the active screen — e.g. while
+  // the create-post screen, an image picker, or the camera is open on top.
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, [])
+  );
 
   const advance = () => {
     setIndex((i) => {
@@ -84,7 +95,7 @@ export default function StoriesScreen() {
   };
 
   useEffect(() => {
-    if (loading || stories.length === 0 || paused) return;
+    if (loading || stories.length === 0 || paused || !isFocused) return;
     progress.setValue(0);
     const anim = Animated.timing(progress, {
       toValue: 1,
@@ -94,7 +105,7 @@ export default function StoriesScreen() {
     animRef.current = anim;
     anim.start(({ finished }) => { if (finished) advance(); });
     return () => { anim.stop(); };
-  }, [index, loading, stories.length, paused]);
+  }, [index, loading, stories.length, paused, isFocused]);
 
   const handleTapLeft = () => {
     if (index > 0) setIndex(index - 1);
