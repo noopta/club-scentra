@@ -1,0 +1,70 @@
+Here’s a clean, structured prompt you can paste into Replit (or any AI dev tool) so it clearly understands what to do:
+
+---
+
+**Prompt:**
+
+Update and improve the UI/UX and functionality of my app across the Explore, Meets, Create Event, Location, Story, and Settings sections. Apply the following changes:
+
+### 1. Explore & Meets Pages
+
+* Redesign the **Location and Date selection button**
+
+  * Make it more visually clear and user-friendly
+  * Ensure consistent styling across both pages
+  * Improve spacing, alignment, and tap area for better usability
+
+### 2. Calendar UI
+
+* Adjust spacing in all calendar components
+
+  * Ensure even padding between dates
+  * Improve readability and touch accessibility
+  * Maintain consistent margins across screens
+
+### 3. Event Cards
+
+* Add an **“Add to Story” button** on each event card
+
+  * Button should be clearly visible but not clutter the UI
+  * Ensure it triggers story-sharing functionality (without auto-posting)
+
+### 4. Create Event Page
+
+* Add a **Back button** at the top of the page for navigation
+* Add a **Cancel button**
+
+  * Cancels event creation and returns user to the previous screen
+  * Ensure no partial data is saved when canceled
+
+### 5. Location Input (Create Event Flow)
+
+* Combine multiple address fields into a **single, clean address input**
+
+  * Example: Street, City, Province, Postal Code in one line or structured autocomplete field
+  * Optimize for mobile input and autofill
+
+### 6. Story Functionality
+
+* Ensure that stories are **NOT automatically posted to the user’s profile page**
+
+  * Stories should only be visible in the story section unless explicitly shared elsewhere
+
+### 7. Settings Page
+
+* Fully implement and fix all buttons and toggles
+
+  * Ensure every button performs its intended function
+  * Fix any broken links, inactive controls, or missing logic
+  * Improve responsiveness and feedback (e.g., loading states, confirmations)
+
+### General Requirements
+
+* Maintain a clean, modern UI consistent with the rest of the app
+* Ensure mobile responsiveness across all updates
+* Avoid breaking existing functionality
+* Follow best practices for UX and accessibility
+
+---
+
+If you want, I can make this even sharper specifically for React Native / Flutter / web (whatever your app is built on) so Replit executes it way more precisely.
