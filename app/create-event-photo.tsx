@@ -102,7 +102,11 @@ export default function CreateEventPhotoScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <WizardHeader title="New Event" />
+      <WizardHeader
+        title="Step 4 of 4"
+        cancelTo="/(tabs)/meets"
+        onCancelConfirm={() => { setImageUri(null); setErrorMsg(''); setSuccessMsg(''); }}
+      />
       <View style={styles.content}>
         <StepIndicator totalSteps={4} currentStep={4} />
 

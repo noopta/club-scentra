@@ -85,7 +85,11 @@ export default function CreateEventScheduleScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <WizardHeader title="New Event" />
+      <WizardHeader
+        title="Step 3 of 4"
+        cancelTo="/(tabs)/meets"
+        onCancelConfirm={() => { setSelectedDate(null); setDateLabel(''); setStartTime('12:00 PM'); setEndTime(''); }}
+      />
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <StepIndicator totalSteps={4} currentStep={3} />
 
@@ -138,9 +142,9 @@ export default function CreateEventScheduleScreen() {
             <View style={styles.handle} />
             <Text style={styles.calTitle}>Select a Date</Text>
             <View style={styles.calHeader}>
-              <TouchableOpacity onPress={prevMonth} style={styles.navBtn}><Ionicons name="chevron-back" size={22} color={Theme.colors.textPrimary} /></TouchableOpacity>
+              <TouchableOpacity onPress={prevMonth} style={styles.navBtn} hitSlop={10}><Ionicons name="chevron-back" size={22} color={Theme.colors.textPrimary} /></TouchableOpacity>
               <Text style={styles.monthLabel}>{MONTHS[viewMonth]} {viewYear}</Text>
-              <TouchableOpacity onPress={nextMonth} style={styles.navBtn}><Ionicons name="chevron-forward" size={22} color={Theme.colors.textPrimary} /></TouchableOpacity>
+              <TouchableOpacity onPress={nextMonth} style={styles.navBtn} hitSlop={10}><Ionicons name="chevron-forward" size={22} color={Theme.colors.textPrimary} /></TouchableOpacity>
             </View>
             <View style={styles.dayRow}>
               {DAYS.map(d => (
@@ -151,7 +155,13 @@ export default function CreateEventScheduleScreen() {
             </View>
             <View style={styles.grid}>
               {cells.map((day, i) => {
-                if (day === null) return <View key={`e-${i}`} style={styles.cellWrap} />;
+                if (day === null) {
+                  return (
+                    <View key={`e-${i}`} style={styles.cellWrap}>
+                      <View style={styles.cellInner} />
+                    </View>
+                  );
+                }
                 const thisDate = new Date(viewYear, viewMonth, day);
                 const isSelected = selectedDate?.toDateString() === thisDate.toDateString();
                 const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -159,9 +169,10 @@ export default function CreateEventScheduleScreen() {
                 return (
                   <View key={day} style={styles.cellWrap}>
                     <TouchableOpacity
-                      style={[styles.cell, isSelected && styles.cellSelected, isToday && !isSelected && styles.cellToday, isPast && styles.cellPast]}
+                      style={[styles.cellInner, isSelected && styles.cellSelected, isToday && !isSelected && styles.cellToday, isPast && styles.cellPast]}
                       onPress={() => !isPast && handleDayPress(day)}
                       disabled={isPast}
+                      activeOpacity={0.7}
                     >
                       <Text style={[styles.cellText, isSelected && styles.cellTextSelected, isToday && !isSelected && styles.cellTextToday, isPast && styles.cellTextPast]}>{day}</Text>
                     </TouchableOpacity>
@@ -201,8 +212,8 @@ export default function CreateEventScheduleScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Theme.colors.background },
-  scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.md, paddingBottom: Theme.spacing.xxl },
-  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xs },
+  scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.lg, paddingBottom: Theme.spacing.xxl },
+  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginTop: Theme.spacing.md, marginBottom: Theme.spacing.xs },
   subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.lg },
   errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },
   errorText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, textAlign: 'center' },
@@ -215,19 +226,19 @@ const styles = StyleSheet.create({
   calendarSheet: { backgroundColor: Theme.colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40 },
   handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Theme.colors.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
   calTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.md, textAlign: 'center' },
-  calHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Theme.spacing.md },
+  calHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Theme.spacing.sm, paddingHorizontal: 4 },
   navBtn: { padding: Theme.spacing.sm },
   monthLabel: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
-  dayRow: { flexDirection: 'row', marginBottom: 8 },
-  dayLabelWrap: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 4 },
-  dayLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.semibold, letterSpacing: 0.5 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 4 },
-  cellWrap: { width: `${100 / 7}%`, padding: 3, alignItems: 'center', justifyContent: 'center' },
-  cell: { width: '100%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 100 },
+  dayRow: { flexDirection: 'row', marginBottom: 4 },
+  dayLabelWrap: { width: `${100 / 7}%`, alignItems: 'center', justifyContent: 'center', paddingVertical: 6 },
+  dayLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+  cellWrap: { width: `${100 / 7}%`, aspectRatio: 1, padding: 3 },
+  cellInner: { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 100 },
   cellSelected: { backgroundColor: Theme.colors.primary },
   cellToday: { borderWidth: 1.5, borderColor: Theme.colors.primary },
   cellPast: { opacity: 0.3 },
-  cellText: { fontSize: Theme.fontSize.sm, color: Theme.colors.textPrimary },
+  cellText: { fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary, fontWeight: Theme.fontWeight.medium },
   cellTextSelected: { color: Theme.colors.white, fontWeight: Theme.fontWeight.bold },
   cellTextToday: { color: Theme.colors.primary, fontWeight: Theme.fontWeight.bold },
   cellTextPast: { color: Theme.colors.textMuted },

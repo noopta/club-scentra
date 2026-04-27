@@ -11,11 +11,11 @@ interface EventCardProps {
   image?: string;
   onPress?: () => void;
   onImagePress?: () => void;
-  onAddStory?: () => void;
+  onAddToStory?: () => void;
   variant?: 'default' | 'popular' | 'past' | 'dark';
 }
 
-export default function EventCard({ name, location, date, image, onPress, onImagePress, onAddStory, variant = 'default' }: EventCardProps) {
+export default function EventCard({ name, location, date, image, onPress, onImagePress, onAddToStory, variant = 'default' }: EventCardProps) {
   const isPopular = variant === 'popular';
   const isPast = variant === 'past';
   const isDark = variant === 'dark';
@@ -63,23 +63,29 @@ export default function EventCard({ name, location, date, image, onPress, onImag
               {date}
             </Text>
           </View>
-          {onAddStory ? (
+          {onAddToStory && (
             <TouchableOpacity
-              style={[styles.storyChip, useLightText && styles.storyChipLight]}
-              onPress={(e) => { e.stopPropagation(); onAddStory(); }}
-              activeOpacity={0.85}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              onPress={onAddToStory}
+              activeOpacity={0.7}
+              hitSlop={6}
+              style={[
+                styles.addStoryBtn,
+                useLightText ? styles.addStoryBtnOnDark : styles.addStoryBtnOnLight,
+              ]}
             >
               <Ionicons
-                name="add-circle"
+                name="add-circle-outline"
                 size={14}
                 color={useLightText ? Theme.colors.white : Theme.colors.primary}
               />
-              <Text style={[styles.storyChipText, useLightText && styles.storyChipTextLight]}>
+              <Text style={[
+                styles.addStoryText,
+                useLightText ? styles.addStoryTextOnDark : styles.addStoryTextOnLight,
+              ]}>
                 Add to Story
               </Text>
             </TouchableOpacity>
-          ) : null}
+          )}
         </View>
       </View>
       <TouchableOpacity
@@ -151,26 +157,33 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     backgroundColor: '#E5E5E5',
   },
-  storyChip: {
+  addStoryBtn: {
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
     gap: 4,
-    backgroundColor: '#FFF0F0',
-    borderRadius: 999,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
+    borderRadius: 12,
     marginTop: 8,
+    borderWidth: 1,
   },
-  storyChipLight: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
+  addStoryBtnOnLight: {
+    borderColor: Theme.colors.primary,
+    backgroundColor: '#FFF5F5',
   },
-  storyChipText: {
+  addStoryBtnOnDark: {
+    borderColor: 'rgba(255,255,255,0.4)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  addStoryText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
+  },
+  addStoryTextOnLight: {
     color: Theme.colors.primary,
   },
-  storyChipTextLight: {
+  addStoryTextOnDark: {
     color: Theme.colors.white,
   },
 });

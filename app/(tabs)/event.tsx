@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/Theme';
 import StepIndicator from '@/components/StepIndicator';
@@ -27,50 +27,64 @@ export default function CreateEventScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <WizardHeader title="New Event" canGoBack={false} />
-      <View style={styles.content}>
-        <StepIndicator totalSteps={4} currentStep={1} />
+      <WizardHeader
+        title="Step 1 of 4"
+        cancelTo="/(tabs)/meets"
+        backBehavesAsCancel
+        onCancelConfirm={() => { setEventName(''); setAboutEvent(''); }}
+      />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <StepIndicator totalSteps={4} currentStep={1} />
 
-        <Text style={styles.title}>Create Event</Text>
-        <Text style={styles.subtitle}>Name your meet</Text>
+          <Text style={styles.title}>Create Event</Text>
+          <Text style={styles.subtitle}>Name your meet</Text>
 
-        {errorMsg ? (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorText}>{errorMsg}</Text>
+          {errorMsg ? (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>{errorMsg}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.formContainer}>
+            <InputField
+              label="Event Name"
+              value={eventName}
+              onChangeText={setEventName}
+              placeholder="e.g. Downtown Drive"
+            />
+
+            <InputField
+              label="About Event"
+              value={aboutEvent}
+              onChangeText={setAboutEvent}
+              placeholder="Tell people what to expect..."
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              containerStyle={styles.aboutContainer}
+            />
+
+            <RedButton title="Next: Location" onPress={handleNext} />
           </View>
-        ) : null}
-
-        <View style={styles.formContainer}>
-          <InputField
-            label="Event Name"
-            value={eventName}
-            onChangeText={setEventName}
-            placeholder="e.g. Downtown Drive"
-          />
-
-          <InputField
-            label="About Event"
-            value={aboutEvent}
-            onChangeText={setAboutEvent}
-            placeholder="Tell people what to expect..."
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            containerStyle={styles.aboutContainer}
-          />
-
-          <RedButton title="Next: Location" onPress={handleNext} />
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Theme.colors.background },
-  content: { flex: 1, paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.lg },
-  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xs },
-  subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xxl },
+  content: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.lg, paddingBottom: Theme.spacing.xxl },
+  title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginTop: Theme.spacing.md, marginBottom: Theme.spacing.xs },
+  subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xl },
   formContainer: { gap: Theme.spacing.md },
   aboutContainer: { marginBottom: 0 },
   errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },

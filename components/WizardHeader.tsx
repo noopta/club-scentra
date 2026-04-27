@@ -1,51 +1,62 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 
 interface WizardHeaderProps {
   title?: string;
-  canGoBack?: boolean;
-  cancelHref?: string;
-  cancelConfirmMessage?: string;
+  cancelTo?: string;
+  onCancelConfirm?: () => void;
+  backBehavesAsCancel?: boolean;
 }
 
-export default function WizardHeader({
-  title,
-  canGoBack = true,
-  cancelHref = '/(tabs)/meets',
-  cancelConfirmMessage = 'Cancel creating this event? Your progress will be lost.',
-}: WizardHeaderProps) {
+export default function WizardHeader({ title, cancelTo = '/(tabs)/event', onCancelConfirm, backBehavesAsCancel = false }: WizardHeaderProps) {
   const router = useRouter();
+
+  const performCancel = () => {
+    if (onCancelConfirm) onCancelConfirm();
+    if (typeof router.dismissAll === 'function') {
+      try { router.dismissAll(); } catch {}
+    }
+    router.replace(cancelTo as never);
+  };
 
   const handleCancel = () => {
     if (Platform.OS === 'web') {
-      const ok = typeof window !== 'undefined' ? window.confirm(cancelConfirmMessage) : true;
-      if (ok) router.replace(cancelHref as never);
+      const ok = typeof window !== 'undefined' && window.confirm
+        ? window.confirm('Discard this event? Anything you\'ve entered will be lost.')
+        : true;
+      if (ok) performCancel();
       return;
     }
     Alert.alert(
-      'Cancel Event Creation',
-      cancelConfirmMessage,
+      'Discard event?',
+      'Anything you\'ve entered will be lost.',
       [
         { text: 'Keep editing', style: 'cancel' },
-        { text: 'Discard', style: 'destructive', onPress: () => router.replace(cancelHref as never) },
-      ],
+        { text: 'Discard', style: 'destructive', onPress: performCancel },
+      ]
     );
   };
 
+  const handleBack = () => {
+    if (backBehavesAsCancel) {
+      handleCancel();
+    } else if (router.canGoBack && router.canGoBack()) {
+      router.back();
+    } else {
+      handleCancel();
+    }
+  };
+
   return (
-    <View style={styles.header}>
-      {canGoBack ? (
-        <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Ionicons name="arrow-back" size={22} color={Theme.colors.textPrimary} />
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.iconBtn} />
-      )}
+    <View style={styles.container}>
+      <TouchableOpacity onPress={handleBack} style={styles.iconBtn} hitSlop={10} activeOpacity={0.7}>
+        <Ionicons name="arrow-back" size={24} color={Theme.colors.textPrimary} />
+      </TouchableOpacity>
       <Text style={styles.title} numberOfLines={1}>{title ?? ''}</Text>
-      <TouchableOpacity onPress={handleCancel} style={styles.cancelBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+      <TouchableOpacity onPress={handleCancel} style={styles.cancelBtn} hitSlop={10} activeOpacity={0.7}>
         <Text style={styles.cancelText}>Cancel</Text>
       </TouchableOpacity>
     </View>
@@ -53,7 +64,7 @@ export default function WizardHeader({
 }
 
 const styles = StyleSheet.create({
-  header: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -70,18 +81,20 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    textAlign: 'center',
     fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.semibold,
-    color: Theme.colors.textPrimary,
+    color: Theme.colors.textSecondary,
+    textAlign: 'center',
   },
   cancelBtn: {
-    paddingHorizontal: 8,
-    minWidth: 56,
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: 8,
+    minWidth: 60,
     alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   cancelText: {
-    fontSize: Theme.fontSize.sm,
+    fontSize: Theme.fontSize.md,
     fontWeight: Theme.fontWeight.semibold,
     color: Theme.colors.primary,
   },

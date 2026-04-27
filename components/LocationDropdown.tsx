@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
+import FilterPill from './FilterPill';
 
 const ALL_LOCATIONS = [
   'All Locations',
@@ -37,37 +38,15 @@ export default function LocationDropdown({ selected, onSelect }: LocationDropdow
     setSearch('');
   };
 
-  const isActive = !!selected;
-  const displayLabel = selected || 'Location';
-
   return (
     <>
-      <TouchableOpacity
-        style={[styles.filterButton, isActive && styles.filterButtonActive]}
+      <FilterPill
+        icon="location-outline"
+        placeholder="Location"
+        value={selected}
         onPress={() => setVisible(true)}
-        activeOpacity={0.85}
-      >
-        <View style={[styles.iconWrap, isActive && styles.iconWrapActive]}>
-          <Ionicons
-            name="location-sharp"
-            size={14}
-            color={isActive ? Theme.colors.white : Theme.colors.primary}
-          />
-        </View>
-        <Text style={[styles.filterText, isActive && styles.filterTextActive]} numberOfLines={1}>
-          {displayLabel}
-        </Text>
-        {isActive ? (
-          <TouchableOpacity
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            onPress={(e) => { e.stopPropagation(); onSelect(''); }}
-          >
-            <Ionicons name="close-circle" size={16} color={Theme.colors.primary} />
-          </TouchableOpacity>
-        ) : (
-          <Ionicons name="chevron-down" size={14} color={Theme.colors.textSecondary} />
-        )}
-      </TouchableOpacity>
+        onClear={() => onSelect('')}
+      />
 
       <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setVisible(false)}>
@@ -125,45 +104,11 @@ export default function LocationDropdown({ selected, onSelect }: LocationDropdow
 }
 
 const styles = StyleSheet.create({
-  filterButton: {
+  overlay: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.white,
-    borderRadius: 999,
-    paddingLeft: 4,
-    paddingRight: 14,
-    paddingVertical: 6,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    minHeight: 40,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
   },
-  filterButtonActive: {
-    borderColor: Theme.colors.primary,
-    backgroundColor: '#FFF5F5',
-  },
-  iconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FFF0F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconWrapActive: {
-    backgroundColor: Theme.colors.primary,
-  },
-  filterText: {
-    flex: 1,
-    fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textPrimary,
-    fontWeight: Theme.fontWeight.semibold,
-  },
-  filterTextActive: {
-    color: Theme.colors.primary,
-  },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: Theme.colors.white,
     borderTopLeftRadius: 24,

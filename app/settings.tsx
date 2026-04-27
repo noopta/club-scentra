@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Image, Platform, Alert, Linking, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Image, Platform, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
@@ -13,24 +13,36 @@ interface SettingsRowProps {
   isToggle?: boolean;
   toggleValue?: boolean;
   onToggle?: (value: boolean) => void;
-  danger?: boolean;
-  saving?: boolean;
-  saved?: boolean;
+  status?: 'saving' | 'saved' | null;
+  isLast?: boolean;
 }
 
-function SettingsRow({ icon, label, onPress, isToggle, toggleValue, onToggle, danger, saving, saved }: SettingsRowProps) {
+function SettingsRow({ icon, label, onPress, isToggle, toggleValue, onToggle, danger, status, isLast }: SettingsRowProps) {
   return (
-    <TouchableOpacity style={styles.settingsRow} onPress={onPress} activeOpacity={isToggle ? 1 : 0.7} disabled={isToggle}>
+    <TouchableOpacity
+      style={[styles.settingsRow, isLast && styles.settingsRowLast]}
+      onPress={onPress}
+      activeOpacity={isToggle ? 1 : 0.7}
+      disabled={isToggle}
+    >
       <Ionicons name={icon} size={22} color={danger ? Theme.colors.danger : Theme.colors.textPrimary} />
       <Text style={[styles.settingsRowLabel, danger && styles.dangerText]}>{label}</Text>
       {isToggle ? (
-        <View style={styles.toggleRight}>
-          {saving ? (
-            <ActivityIndicator size="small" color={Theme.colors.primary} style={styles.toggleStatus} />
-          ) : saved ? (
-            <Ionicons name="checkmark-circle" size={18} color={Theme.colors.primary} style={styles.toggleStatus} />
+        <View style={styles.toggleArea}>
+          {status === 'saving' ? (
+            <ActivityIndicator size="small" color={Theme.colors.primary} style={{ marginRight: 8 }} />
+          ) : status === 'saved' ? (
+            <View style={styles.savedPill}>
+              <Ionicons name="checkmark" size={12} color={Theme.colors.white} />
+              <Text style={styles.savedText}>Saved</Text>
+            </View>
           ) : null}
-          <Switch value={toggleValue} onValueChange={onToggle} trackColor={{ false: Theme.colors.border, true: Theme.colors.primary }} thumbColor={Theme.colors.white} />
+          <Switch
+            value={toggleValue}
+            onValueChange={onToggle}
+            trackColor={{ false: Theme.colors.border, true: Theme.colors.primary }}
+            thumbColor={Theme.colors.white}
+          />
         </View>
       ) : (
         <Ionicons name="chevron-forward" size={18} color={Theme.colors.textMuted} />
@@ -39,24 +51,7 @@ function SettingsRow({ icon, label, onPress, isToggle, toggleValue, onToggle, da
   );
 }
 
-function showAlert(title: string, message: string, onConfirm?: () => void) {
-  if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined') {
-      if (onConfirm) {
-        if (window.confirm(`${title}\n\n${message}`)) onConfirm();
-      } else {
-        window.alert(`${title}\n\n${message}`);
-      }
-    }
-    return;
-  }
-  Alert.alert(title, message, onConfirm ? [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Confirm', style: 'destructive', onPress: onConfirm },
-  ] : [{ text: 'OK' }]);
-}
-
-const COMING_SOON = 'This feature is coming soon. We\'re still putting it together — thanks for your patience.';
+type ToggleKey = 'pushNotifications' | 'emailNotifications' | 'darkMode' | 'locationServices';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -65,8 +60,11 @@ export default function SettingsScreen() {
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [locationServices, setLocationServices] = useState(true);
-  const [savingKey, setSavingKey] = useState<string | null>(null);
-  const [savedKey, setSavedKey] = useState<string | null>(null);
+  const [toggleStatus, setToggleStatus] = useState<Record<ToggleKey, 'saving' | 'saved' | null>>({
+    pushNotifications: null, emailNotifications: null, darkMode: null, locationServices: null,
+  });
+  const [banner, setBanner] = useState<{ message: string; tone: 'info' | 'error' } | null>(null);
+  const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     users.getSettings()
@@ -79,29 +77,37 @@ export default function SettingsScreen() {
       .catch(() => {});
   }, []);
 
-  const revertMap: Record<string, (v: boolean) => void> = {
-    pushNotifications: setPushNotifications,
-    emailNotifications: setEmailNotifications,
-    darkMode: setDarkMode,
-    locationServices: setLocationServices,
+  useEffect(() => () => {
+    if (bannerTimer.current) clearTimeout(bannerTimer.current);
+  }, []);
+
+  const showBanner = (message: string, tone: 'info' | 'error' = 'info') => {
+    if (bannerTimer.current) clearTimeout(bannerTimer.current);
+    setBanner({ message, tone });
+    bannerTimer.current = setTimeout(() => setBanner(null), 2800);
   };
 
-  const updateSetting = async (key: string, value: boolean) => {
-    setSavingKey(key);
-    setSavedKey(null);
+  const updateSetting = async (key: ToggleKey, value: boolean) => {
+    setToggleStatus(s => ({ ...s, [key]: 'saving' }));
     try {
       await users.updateSettings({ [key]: value });
-      setSavedKey(key);
+      setToggleStatus(s => ({ ...s, [key]: 'saved' }));
       setTimeout(() => {
-        setSavedKey(prev => (prev === key ? null : prev));
-      }, 1500);
+        setToggleStatus(s => ({ ...s, [key]: null }));
+      }, 1800);
     } catch {
-      const revert = revertMap[key];
-      if (revert) revert(!value);
-      showAlert('Could not save', 'We couldn\'t save that change. Please try again in a moment.');
-    } finally {
-      setSavingKey(prev => (prev === key ? null : prev));
+      setToggleStatus(s => ({ ...s, [key]: null }));
+      // revert local state
+      if (key === 'pushNotifications') setPushNotifications(!value);
+      if (key === 'emailNotifications') setEmailNotifications(!value);
+      if (key === 'darkMode') setDarkMode(!value);
+      if (key === 'locationServices') setLocationServices(!value);
+      showBanner('Couldn\'t save that change. Please try again.', 'error');
     }
+  };
+
+  const comingSoon = (label: string) => () => {
+    showBanner(`${label} is coming soon.`);
   };
 
   const handleLogout = async () => {
@@ -109,41 +115,26 @@ export default function SettingsScreen() {
     router.replace('/(auth)/landing');
   };
 
-  const handleChangePassword = () => {
-    showAlert(
-      'Change Password',
-      'Password reset is coming soon. In the meantime, email support@clubscentra.com and we\'ll help you reset it.',
-    );
-  };
-
-  const handlePrivacy = () => {
-    showAlert('Privacy Settings', COMING_SOON);
-  };
-
-  const handleHelp = async () => {
-    const url = 'mailto:support@clubscentra.com?subject=Club%20Scentra%20Help';
-    const ok = await Linking.canOpenURL(url).catch(() => false);
-    if (ok) Linking.openURL(url);
-    else showAlert('Help Center', 'Email us at support@clubscentra.com and we\'ll get back to you.');
-  };
-
-  const handleReport = async () => {
-    const url = 'mailto:support@clubscentra.com?subject=Club%20Scentra%20Bug%20Report&body=Tell%20us%20what%20happened%3A%0A%0A';
-    const ok = await Linking.canOpenURL(url).catch(() => false);
-    if (ok) Linking.openURL(url);
-    else showAlert('Report a Problem', 'Email us at support@clubscentra.com with details and screenshots if you have them.');
-  };
-
   const handleDeleteAccount = () => {
-    showAlert(
-      'Delete Account',
-      'This will permanently remove your profile, posts, and meet history. This cannot be undone.',
-      () => {
-        showAlert(
-          'Account Deletion',
-          'Account deletion is processed manually for safety. We\'ve made a note — please email support@clubscentra.com from your account email and we\'ll complete it within 7 days.',
-        );
-      },
+    const message = 'Deleting your account is permanent. All your events, posts, and messages will be removed. This cannot be undone.';
+    if (Platform.OS === 'web') {
+      const ok = typeof window !== 'undefined' && window.confirm
+        ? window.confirm(`Delete account?\n\n${message}`)
+        : false;
+      if (ok) showBanner('Account deletion is coming soon.');
+      return;
+    }
+    Alert.alert(
+      'Delete account?',
+      message,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => showBanner('Account deletion is coming soon.'),
+        },
+      ]
     );
   };
 
@@ -156,6 +147,17 @@ export default function SettingsScreen() {
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={styles.headerSpacer} />
       </View>
+
+      {banner && (
+        <View style={[styles.banner, banner.tone === 'error' ? styles.bannerError : styles.bannerInfo]}>
+          <Ionicons
+            name={banner.tone === 'error' ? 'alert-circle' : 'information-circle'}
+            size={18}
+            color={banner.tone === 'error' ? Theme.colors.primary : Theme.colors.primary}
+          />
+          <Text style={styles.bannerText}>{banner.message}</Text>
+        </View>
+      )}
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <TouchableOpacity style={styles.profileCard} activeOpacity={0.8} onPress={() => router.push('/edit-profile')}>
@@ -174,8 +176,8 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>Account</Text>
         <View style={styles.sectionCard}>
           <SettingsRow icon="person-outline" label="Edit Profile" onPress={() => router.push('/edit-profile')} />
-          <SettingsRow icon="lock-closed-outline" label="Change Password" onPress={handleChangePassword} />
-          <SettingsRow icon="shield-outline" label="Privacy" onPress={handlePrivacy} />
+          <SettingsRow icon="lock-closed-outline" label="Change Password" onPress={comingSoon('Change Password')} />
+          <SettingsRow icon="shield-outline" label="Privacy" onPress={comingSoon('Privacy controls')} isLast />
         </View>
 
         <Text style={styles.sectionTitle}>Notifications</Text>
@@ -185,18 +187,17 @@ export default function SettingsScreen() {
             label="Push Notifications"
             isToggle
             toggleValue={pushNotifications}
+            status={toggleStatus.pushNotifications}
             onToggle={(v) => { setPushNotifications(v); updateSetting('pushNotifications', v); }}
-            saving={savingKey === 'pushNotifications'}
-            saved={savedKey === 'pushNotifications'}
           />
           <SettingsRow
             icon="mail-outline"
             label="Email Notifications"
             isToggle
             toggleValue={emailNotifications}
+            status={toggleStatus.emailNotifications}
             onToggle={(v) => { setEmailNotifications(v); updateSetting('emailNotifications', v); }}
-            saving={savingKey === 'emailNotifications'}
-            saved={savedKey === 'emailNotifications'}
+            isLast
           />
         </View>
 
@@ -207,32 +208,31 @@ export default function SettingsScreen() {
             label="Dark Mode"
             isToggle
             toggleValue={darkMode}
+            status={toggleStatus.darkMode}
             onToggle={(v) => { setDarkMode(v); updateSetting('darkMode', v); }}
-            saving={savingKey === 'darkMode'}
-            saved={savedKey === 'darkMode'}
           />
           <SettingsRow
             icon="navigate-outline"
             label="Location Services"
             isToggle
             toggleValue={locationServices}
+            status={toggleStatus.locationServices}
             onToggle={(v) => { setLocationServices(v); updateSetting('locationServices', v); }}
-            saving={savingKey === 'locationServices'}
-            saved={savedKey === 'locationServices'}
+            isLast
           />
         </View>
 
         <Text style={styles.sectionTitle}>Support</Text>
         <View style={styles.sectionCard}>
-          <SettingsRow icon="help-circle-outline" label="Help Center" onPress={handleHelp} />
-          <SettingsRow icon="alert-circle-outline" label="Report a Problem" onPress={handleReport} />
+          <SettingsRow icon="help-circle-outline" label="Help Center" onPress={comingSoon('Help Center')} />
+          <SettingsRow icon="alert-circle-outline" label="Report a Problem" onPress={comingSoon('Reporting')} />
           <SettingsRow icon="document-text-outline" label="Terms of Service" onPress={() => router.push('/terms')} />
-          <SettingsRow icon="eye-outline" label="Privacy Policy" onPress={() => router.push('/privacy-policy')} />
+          <SettingsRow icon="eye-outline" label="Privacy Policy" onPress={comingSoon('Privacy Policy')} isLast />
         </View>
 
         <View style={styles.sectionCard}>
           <SettingsRow icon="log-out-outline" label="Log Out" danger onPress={handleLogout} />
-          <SettingsRow icon="trash-outline" label="Delete Account" danger onPress={handleDeleteAccount} />
+          <SettingsRow icon="trash-outline" label="Delete Account" danger onPress={handleDeleteAccount} isLast />
         </View>
 
         <Text style={styles.versionText}>Club Scentra v1.0.0</Text>
@@ -247,6 +247,30 @@ const styles = StyleSheet.create({
   backButton: { padding: Theme.spacing.sm },
   headerTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
   headerSpacer: { width: 40 },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: Theme.spacing.md,
+    marginBottom: Theme.spacing.sm,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: 10,
+    borderRadius: Theme.borderRadius.sm,
+    borderWidth: 1,
+  },
+  bannerInfo: {
+    backgroundColor: '#FFF5F5',
+    borderColor: '#FFCDD2',
+  },
+  bannerError: {
+    backgroundColor: '#FFF0F0',
+    borderColor: '#FFCDD2',
+  },
+  bannerText: {
+    flex: 1,
+    fontSize: Theme.fontSize.sm,
+    color: Theme.colors.textPrimary,
+  },
   scrollContent: { paddingHorizontal: Theme.spacing.md, paddingBottom: Theme.spacing.xxl },
   profileCard: { backgroundColor: Theme.colors.cardBackground, borderRadius: Theme.borderRadius.md, flexDirection: 'row', alignItems: 'center', padding: Theme.spacing.md, marginBottom: Theme.spacing.lg },
   profileAvatar: { width: 50, height: 50, borderRadius: 25, marginRight: Theme.spacing.md },
@@ -256,7 +280,24 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: Theme.spacing.sm, marginTop: Theme.spacing.sm },
   sectionCard: { backgroundColor: Theme.colors.cardBackground, borderRadius: Theme.borderRadius.md, marginBottom: Theme.spacing.md, overflow: 'hidden' },
   settingsRow: { flexDirection: 'row', alignItems: 'center', padding: Theme.spacing.md, borderBottomWidth: 1, borderBottomColor: Theme.colors.divider },
+  settingsRowLast: { borderBottomWidth: 0 },
   settingsRowLabel: { flex: 1, fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary, marginLeft: Theme.spacing.md },
+  toggleArea: { flexDirection: 'row', alignItems: 'center' },
+  savedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: Theme.colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 100,
+    marginRight: 8,
+  },
+  savedText: {
+    color: Theme.colors.white,
+    fontSize: 11,
+    fontWeight: Theme.fontWeight.semibold,
+  },
   dangerText: { color: Theme.colors.danger },
   versionText: { textAlign: 'center', fontSize: Theme.fontSize.sm, color: Theme.colors.textMuted, marginTop: Theme.spacing.md },
   toggleRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
