@@ -16,9 +16,6 @@ export default function WizardHeader({ title, cancelTo = '/(tabs)/event', onCanc
 
   const performCancel = () => {
     if (onCancelConfirm) onCancelConfirm();
-    if (typeof router.dismissAll === 'function') {
-      try { router.dismissAll(); } catch {}
-    }
     router.replace(cancelTo as never);
   };
 

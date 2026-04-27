@@ -87,7 +87,7 @@ export default function StoriesScreen() {
   const advance = () => {
     setIndex((i) => {
       if (i + 1 >= stories.length) {
-        router.back();
+        setTimeout(() => router.back(), 0);
         return i;
       }
       return i + 1;
