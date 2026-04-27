@@ -91,6 +91,7 @@ export default function ExploreScreen() {
                   variant="popular"
                   onPress={() => router.push({ pathname: '/event-detail', params: { id: event.id } })}
                   onImagePress={() => router.push({ pathname: '/stories', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
+                  onAddStory={() => router.push({ pathname: '/create-post', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
                 />
               ))
             )}
@@ -109,6 +110,7 @@ export default function ExploreScreen() {
                   variant="dark"
                   onPress={() => router.push({ pathname: '/event-detail', params: { id: event.id } })}
                   onImagePress={() => router.push({ pathname: '/stories', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
+                  onAddStory={() => router.push({ pathname: '/create-post', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
                 />
               ))
             )}

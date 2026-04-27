@@ -34,7 +34,8 @@ export default function ProfileScreen() {
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
-  const photoUrls = posts.map(p => p.imageUrl);
+  const profileOnlyPosts = posts.filter(p => !p.eventId);
+  const photoUrls = profileOnlyPosts.map(p => p.imageUrl);
 
   return (
     <View style={styles.container}>

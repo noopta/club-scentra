@@ -8,13 +8,14 @@ interface EventCardProps {
   name: string;
   location: string;
   date: string;
-  image: string;
+  image?: string;
   onPress?: () => void;
   onImagePress?: () => void;
+  onAddStory?: () => void;
   variant?: 'default' | 'popular' | 'past' | 'dark';
 }
 
-export default function EventCard({ name, location, date, image, onPress, onImagePress, variant = 'default' }: EventCardProps) {
+export default function EventCard({ name, location, date, image, onPress, onImagePress, onAddStory, variant = 'default' }: EventCardProps) {
   const isPopular = variant === 'popular';
   const isPast = variant === 'past';
   const isDark = variant === 'dark';
@@ -62,6 +63,23 @@ export default function EventCard({ name, location, date, image, onPress, onImag
               {date}
             </Text>
           </View>
+          {onAddStory ? (
+            <TouchableOpacity
+              style={[styles.storyChip, useLightText && styles.storyChipLight]}
+              onPress={(e) => { e.stopPropagation(); onAddStory(); }}
+              activeOpacity={0.85}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+            >
+              <Ionicons
+                name="add-circle"
+                size={14}
+                color={useLightText ? Theme.colors.white : Theme.colors.primary}
+              />
+              <Text style={[styles.storyChipText, useLightText && styles.storyChipTextLight]}>
+                Add to Story
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
       <TouchableOpacity
@@ -112,8 +130,7 @@ const styles = StyleSheet.create({
   lightName: {
     color: Theme.colors.white,
   },
-  infoGroup: {
-  },
+  infoGroup: {},
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -133,5 +150,27 @@ const styles = StyleSheet.create({
   },
   imagePlaceholder: {
     backgroundColor: '#E5E5E5',
+  },
+  storyChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    backgroundColor: '#FFF0F0',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginTop: 8,
+  },
+  storyChipLight: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  storyChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Theme.colors.primary,
+  },
+  storyChipTextLight: {
+    color: Theme.colors.white,
   },
 });

@@ -92,3 +92,7 @@ deploymentTarget = "autoscale"
 build = ["npx", "expo", "export", "--platform", "web"]
 publicDir = "dist"
 run = ["npx", "serve", "dist", "--listen", "5000"]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 180000

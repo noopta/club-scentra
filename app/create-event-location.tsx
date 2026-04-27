@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import StepIndicator from '@/components/StepIndicator';
 import InputField from '@/components/InputField';
 import RedButton from '@/components/RedButton';
+import WizardHeader from '@/components/WizardHeader';
 
 type Suggestion = {
   display: string;
@@ -22,10 +23,7 @@ export default function CreateEventLocationScreen() {
   const params = useLocalSearchParams<{ title: string; description: string }>();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [region, setRegion] = useState('');
-  const [postalCode, setPostalCode] = useState('');
+  const [picked, setPicked] = useState<Suggestion | null>(null);
   const [additionalInfo, setAdditionalInfo] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -63,35 +61,57 @@ export default function CreateEventLocationScreen() {
 
   const handleSearchChange = (text: string) => {
     setSearchQuery(text);
+    if (picked) setPicked(null);
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => fetchSuggestions(text), 400);
   };
 
   const handleSelect = (item: Suggestion) => {
-    setAddress(item.address);
-    setCity(item.city);
-    setRegion(item.region);
-    setPostalCode(item.postalCode);
-    setSearchQuery(item.address ? `${item.address}${item.city ? ', ' + item.city : ''}` : item.display.split(',').slice(0, 2).join(','));
+    setPicked(item);
+    const display = item.address
+      ? `${item.address}${item.city ? ', ' + item.city : ''}${item.region ? ', ' + item.region : ''}`
+      : item.display.split(',').slice(0, 2).join(',');
+    setSearchQuery(display);
     setShowSuggestions(false);
     setSuggestions([]);
   };
 
+  const handleClearPick = () => {
+    setPicked(null);
+    setSearchQuery('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
+
   const handleNext = () => {
     setErrorMsg('');
-    if (!address.trim() || !city.trim()) {
-      setErrorMsg('Please enter an address and city.');
+
+    let address = picked?.address?.trim() ?? '';
+    let city = picked?.city?.trim() ?? '';
+    let region = picked?.region?.trim() ?? '';
+    let postalCode = picked?.postalCode?.trim() ?? '';
+
+    if (!picked && searchQuery.trim()) {
+      const parts = searchQuery.split(',').map(p => p.trim()).filter(Boolean);
+      address = parts[0] ?? '';
+      city = parts[1] ?? '';
+      region = parts[2] ?? '';
+    }
+
+    if (!address || !city) {
+      setErrorMsg('Pick an address from the list, or include at least "Street, City" in your search.');
       return;
     }
+
     router.push({
       pathname: '/create-event-schedule',
       params: {
         title: params.title,
         description: params.description,
-        addressLine: address.trim(),
-        city: city.trim(),
-        region: region.trim(),
-        postalCode: postalCode.trim(),
+        addressLine: address,
+        city,
+        region,
+        postalCode,
         additionalInfo: additionalInfo.trim(),
       },
     });
@@ -99,30 +119,31 @@ export default function CreateEventLocationScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <WizardHeader title="New Event" />
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <StepIndicator totalSteps={4} currentStep={2} />
 
         <Text style={styles.title}>Location</Text>
-        <Text style={styles.subtitle}>Add an address</Text>
+        <Text style={styles.subtitle}>Search for your meet's address</Text>
 
         {errorMsg ? <View style={styles.errorBanner}><Text style={styles.errorText}>{errorMsg}</Text></View> : null}
 
         <View style={styles.searchWrapper}>
-          <Text style={styles.inputLabel}>Search Address</Text>
+          <Text style={styles.inputLabel}>Address</Text>
           <View style={styles.searchRow}>
             <Ionicons name="search" size={18} color={Theme.colors.textMuted} style={styles.searchIcon} />
-            <InputField
-              label=""
+            <TextInput
               value={searchQuery}
               onChangeText={handleSearchChange}
               onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
               style={styles.searchInput}
               placeholder="Start typing an address..."
+              placeholderTextColor={Theme.colors.textMuted}
               autoCapitalize="words"
             />
-            {searching && <ActivityIndicator size="small" color={Theme.colors.primary} style={styles.searchSpinner} />}
+            {searching && <ActivityIndicator size="small" color={Theme.colors.primary} style={styles.searchTrailingIcon} />}
             {searchQuery.length > 0 && !searching && (
-              <TouchableOpacity style={styles.clearBtn} onPress={() => { setSearchQuery(''); setSuggestions([]); setShowSuggestions(false); }}>
+              <TouchableOpacity style={styles.searchTrailingIcon} onPress={handleClearPick} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Ionicons name="close-circle" size={18} color={Theme.colors.textMuted} />
               </TouchableOpacity>
             )}
@@ -151,11 +172,33 @@ export default function CreateEventLocationScreen() {
           )}
         </View>
 
-        <InputField label="Address" required value={address} onChangeText={setAddress} />
-        <InputField label="City" required value={city} onChangeText={setCity} />
-        <InputField label="Province / State" value={region} onChangeText={setRegion} />
-        <InputField label="Postal Code / Zip" value={postalCode} onChangeText={setPostalCode} />
-        <InputField label="Additional Info" value={additionalInfo} onChangeText={setAdditionalInfo} multiline />
+        {picked ? (
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryHeader}>
+              <Ionicons name="checkmark-circle" size={18} color={Theme.colors.primary} />
+              <Text style={styles.summaryTitle}>Selected location</Text>
+              <TouchableOpacity onPress={handleClearPick} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={styles.summaryChange}>Change</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.summaryAddress}>{picked.address}</Text>
+            <Text style={styles.summaryMeta}>
+              {[picked.city, picked.region, picked.postalCode].filter(Boolean).join(', ')}
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.helperText}>
+            Tip: pick a result from the dropdown so we can fill in city, region, and postal code automatically.
+          </Text>
+        )}
+
+        <InputField
+          label="Additional Info"
+          value={additionalInfo}
+          onChangeText={setAdditionalInfo}
+          placeholder="Parking, entry instructions, etc. (optional)"
+          multiline
+        />
 
         <RedButton title="Next: Date and Time" onPress={handleNext} />
       </ScrollView>
@@ -165,7 +208,7 @@ export default function CreateEventLocationScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Theme.colors.background },
-  scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.xxl, paddingBottom: Theme.spacing.xxl, gap: Theme.spacing.sm },
+  scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.md, paddingBottom: Theme.spacing.xxl, gap: Theme.spacing.sm },
   title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xs },
   subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.md },
   errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md },
@@ -173,10 +216,18 @@ const styles = StyleSheet.create({
   searchWrapper: { zIndex: 10, marginBottom: Theme.spacing.xs },
   inputLabel: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary, marginBottom: 6 },
   searchRow: { position: 'relative', flexDirection: 'row', alignItems: 'center' },
-  searchIcon: { position: 'absolute', left: 12, top: '50%', zIndex: 2, marginTop: -9 },
-  searchInput: { flex: 1, paddingLeft: 36 },
-  searchSpinner: { position: 'absolute', right: 12, top: '50%', marginTop: -10 },
-  clearBtn: { position: 'absolute', right: 12, top: '50%', marginTop: -9, zIndex: 2 },
+  searchIcon: { position: 'absolute', left: 12, zIndex: 2 },
+  searchInput: {
+    flex: 1,
+    backgroundColor: Theme.colors.inputBackground,
+    borderRadius: Theme.borderRadius.sm,
+    paddingLeft: 38,
+    paddingRight: 38,
+    paddingVertical: 14,
+    fontSize: Theme.fontSize.md,
+    color: Theme.colors.textPrimary,
+  },
+  searchTrailingIcon: { position: 'absolute', right: 12, zIndex: 2 },
   suggestionsBox: {
     backgroundColor: Theme.colors.white, borderRadius: Theme.borderRadius.md,
     borderWidth: 1, borderColor: Theme.colors.border, overflow: 'hidden',
@@ -187,4 +238,18 @@ const styles = StyleSheet.create({
   suggestionBorder: { borderBottomWidth: 1, borderBottomColor: Theme.colors.border },
   suggestionMain: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: Theme.colors.textPrimary },
   suggestionSub: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, marginTop: 2 },
+  summaryCard: {
+    backgroundColor: '#FFF5F5',
+    borderRadius: Theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: '#FFE0E0',
+    padding: Theme.spacing.md,
+    marginTop: 4,
+  },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  summaryTitle: { flex: 1, fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.bold, color: Theme.colors.primary },
+  summaryChange: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.primary },
+  summaryAddress: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: Theme.colors.textPrimary },
+  summaryMeta: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, marginTop: 2 },
+  helperText: { fontSize: Theme.fontSize.sm, color: Theme.colors.textSecondary, paddingHorizontal: 4, marginTop: 4 },
 });

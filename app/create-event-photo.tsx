@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import StepIndicator from '@/components/StepIndicator';
 import RedButton from '@/components/RedButton';
+import WizardHeader from '@/components/WizardHeader';
 import * as ImagePicker from 'expo-image-picker';
 import { events as eventsApi, uploads } from '@/lib/api';
 
@@ -101,6 +102,7 @@ export default function CreateEventPhotoScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <WizardHeader title="New Event" />
       <View style={styles.content}>
         <StepIndicator totalSteps={4} currentStep={4} />
 
@@ -156,7 +158,7 @@ export default function CreateEventPhotoScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Theme.colors.background },
-  content: { flex: 1, paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.xxl },
+  content: { flex: 1, paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.lg },
   title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xs },
   subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.xxl },
   uploadArea: { backgroundColor: Theme.colors.inputBackground, borderRadius: Theme.borderRadius.lg, borderWidth: 2, borderColor: Theme.colors.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', height: 200, marginBottom: Theme.spacing.md, overflow: 'hidden' },

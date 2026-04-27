@@ -166,6 +166,7 @@ export type Post = {
   caption: string | null;
   createdAt: string;
   authorId: string;
+  eventId?: string | null;
 };
 
 export const auth = {

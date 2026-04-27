@@ -53,6 +53,7 @@ export default function DateDropdown({ selected, onSelect }: DateDropdownProps) 
     }
   };
 
+  const isActive = !!selected;
   const displayLabel = selected || 'Date';
 
   const cells: (number | null)[] = [];
@@ -63,15 +64,26 @@ export default function DateDropdown({ selected, onSelect }: DateDropdownProps) 
   return (
     <>
       <TouchableOpacity
-        style={[styles.filterButton, selected ? styles.filterButtonActive : null]}
+        style={[styles.filterButton, isActive && styles.filterButtonActive]}
         onPress={() => setVisible(true)}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
       >
-        <Ionicons name="calendar" size={14} color={Theme.colors.primary} />
-        <Text style={[styles.filterText, selected ? styles.filterTextActive : null]} numberOfLines={1}>
+        <View style={[styles.iconWrap, isActive && styles.iconWrapActive]}>
+          <Ionicons name="calendar" size={14} color={isActive ? Theme.colors.white : Theme.colors.primary} />
+        </View>
+        <Text style={[styles.filterText, isActive && styles.filterTextActive]} numberOfLines={1}>
           {displayLabel}
         </Text>
-        <Ionicons name="chevron-down" size={14} color={Theme.colors.textPrimary} />
+        {isActive ? (
+          <TouchableOpacity
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={(e) => { e.stopPropagation(); onSelect(''); }}
+          >
+            <Ionicons name="close-circle" size={16} color={Theme.colors.primary} />
+          </TouchableOpacity>
+        ) : (
+          <Ionicons name="chevron-down" size={14} color={Theme.colors.textSecondary} />
+        )}
       </TouchableOpacity>
 
       <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
@@ -105,38 +117,41 @@ export default function DateDropdown({ selected, onSelect }: DateDropdownProps) 
             )}
 
             <View style={styles.calHeader}>
-              <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
+              <TouchableOpacity onPress={prevMonth} style={styles.navBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Ionicons name="chevron-back" size={20} color={Theme.colors.textPrimary} />
               </TouchableOpacity>
               <Text style={styles.monthLabel}>{MONTHS[viewMonth]} {viewYear}</Text>
-              <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
+              <TouchableOpacity onPress={nextMonth} style={styles.navBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Ionicons name="chevron-forward" size={20} color={Theme.colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.dayRow}>
               {DAYS.map(d => (
-                <Text key={d} style={styles.dayLabel}>{d}</Text>
+                <View key={d} style={styles.dayLabelWrap}>
+                  <Text style={styles.dayLabel}>{d}</Text>
+                </View>
               ))}
             </View>
 
             <View style={styles.grid}>
               {cells.map((day, i) => {
-                if (day === null) return <View key={`empty-${i}`} style={styles.cell} />;
+                if (day === null) return <View key={`empty-${i}`} style={styles.cellWrap} />;
                 const label = new Date(viewYear, viewMonth, day).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
                 const isSelected = selected === label;
                 const isToday = day === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
                 return (
-                  <TouchableOpacity
-                    key={day}
-                    style={[styles.cell, isSelected && styles.cellSelected, isToday && !isSelected && styles.cellToday]}
-                    onPress={() => handleDayPress(day)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.cellText, isSelected && styles.cellTextSelected, isToday && !isSelected && styles.cellTextToday]}>
-                      {day}
-                    </Text>
-                  </TouchableOpacity>
+                  <View key={day} style={styles.cellWrap}>
+                    <TouchableOpacity
+                      style={[styles.cell, isSelected && styles.cellSelected, isToday && !isSelected && styles.cellToday]}
+                      onPress={() => handleDayPress(day)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.cellText, isSelected && styles.cellTextSelected, isToday && !isSelected && styles.cellTextToday]}>
+                        {day}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 );
               })}
             </View>
@@ -155,147 +170,65 @@ export default function DateDropdown({ selected, onSelect }: DateDropdownProps) 
 
 const styles = StyleSheet.create({
   filterButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Theme.colors.white,
-    borderRadius: Theme.borderRadius.xl,
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
-    gap: 6,
+    borderRadius: 999,
+    paddingLeft: 4,
+    paddingRight: 14,
+    paddingVertical: 6,
+    gap: 8,
     borderWidth: 1,
     borderColor: Theme.colors.border,
-    maxWidth: 140,
+    minHeight: 40,
   },
   filterButtonActive: {
     borderColor: Theme.colors.primary,
     backgroundColor: '#FFF5F5',
   },
+  iconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFF0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: Theme.colors.primary,
+  },
   filterText: {
+    flex: 1,
     fontSize: Theme.fontSize.sm,
     color: Theme.colors.textPrimary,
-    fontWeight: Theme.fontWeight.medium,
-    flex: 1,
+    fontWeight: Theme.fontWeight.semibold,
   },
   filterTextActive: {
     color: Theme.colors.primary,
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: Theme.colors.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: Theme.spacing.lg,
-    paddingTop: Theme.spacing.md,
-    paddingBottom: 40,
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Theme.colors.border,
-    alignSelf: 'center',
-    marginBottom: Theme.spacing.md,
-  },
-  title: {
-    fontSize: Theme.fontSize.lg,
-    fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
-    marginBottom: Theme.spacing.md,
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.background,
-    borderRadius: Theme.borderRadius.sm,
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
-    marginBottom: Theme.spacing.sm,
-    gap: Theme.spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: Theme.fontSize.md,
-    color: Theme.colors.textPrimary,
-  },
-  searchApply: {
-    backgroundColor: Theme.colors.primary,
-    borderRadius: Theme.borderRadius.sm,
-    paddingVertical: 10,
-    alignItems: 'center',
-    marginBottom: Theme.spacing.md,
-  },
-  searchApplyText: {
-    color: Theme.colors.white,
-    fontWeight: Theme.fontWeight.medium,
-    fontSize: Theme.fontSize.sm,
-  },
-  calHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Theme.spacing.md,
-  },
-  navBtn: {
-    padding: Theme.spacing.sm,
-  },
-  monthLabel: {
-    fontSize: Theme.fontSize.md,
-    fontWeight: Theme.fontWeight.bold,
-    color: Theme.colors.textPrimary,
-  },
-  dayRow: {
-    flexDirection: 'row',
-    marginBottom: 6,
-  },
-  dayLabel: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: Theme.fontSize.xs,
-    color: Theme.colors.textSecondary,
-    fontWeight: Theme.fontWeight.medium,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  cell: {
-    width: '14.28%',
-    aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 100,
-  },
-  cellSelected: {
-    backgroundColor: Theme.colors.primary,
-  },
-  cellToday: {
-    backgroundColor: Theme.colors.background,
-    borderWidth: 1,
-    borderColor: Theme.colors.primary,
-  },
-  cellText: {
-    fontSize: Theme.fontSize.sm,
-    color: Theme.colors.textPrimary,
-  },
-  cellTextSelected: {
-    color: Theme.colors.white,
-    fontWeight: Theme.fontWeight.bold,
-  },
-  cellTextToday: {
-    color: Theme.colors.primary,
-    fontWeight: Theme.fontWeight.bold,
-  },
-  clearBtn: {
-    marginTop: Theme.spacing.md,
-    alignItems: 'center',
-  },
-  clearText: {
-    fontSize: Theme.fontSize.sm,
-    color: Theme.colors.primary,
-    fontWeight: Theme.fontWeight.medium,
-  },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: Theme.colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Theme.colors.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
+  title: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, marginBottom: Theme.spacing.md },
+  searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.colors.background, borderRadius: Theme.borderRadius.sm, paddingHorizontal: Theme.spacing.md, paddingVertical: Theme.spacing.sm, marginBottom: Theme.spacing.sm, gap: Theme.spacing.sm },
+  searchInput: { flex: 1, fontSize: Theme.fontSize.md, color: Theme.colors.textPrimary },
+  searchApply: { backgroundColor: Theme.colors.primary, borderRadius: Theme.borderRadius.sm, paddingVertical: 10, alignItems: 'center', marginBottom: Theme.spacing.md },
+  searchApplyText: { color: Theme.colors.white, fontWeight: Theme.fontWeight.medium, fontSize: Theme.fontSize.sm },
+  calHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Theme.spacing.md, paddingHorizontal: 4 },
+  navBtn: { padding: Theme.spacing.sm, width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  monthLabel: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
+  dayRow: { flexDirection: 'row', marginBottom: 8 },
+  dayLabelWrap: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 4 },
+  dayLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.semibold, letterSpacing: 0.5 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 4 },
+  cellWrap: { width: `${100 / 7}%`, padding: 3, alignItems: 'center', justifyContent: 'center' },
+  cell: { width: '100%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 100 },
+  cellSelected: { backgroundColor: Theme.colors.primary },
+  cellToday: { backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.primary },
+  cellText: { fontSize: Theme.fontSize.sm, color: Theme.colors.textPrimary },
+  cellTextSelected: { color: Theme.colors.white, fontWeight: Theme.fontWeight.bold },
+  cellTextToday: { color: Theme.colors.primary, fontWeight: Theme.fontWeight.bold },
+  clearBtn: { marginTop: Theme.spacing.md, alignItems: 'center', paddingVertical: 8 },
+  clearText: { fontSize: Theme.fontSize.sm, color: Theme.colors.primary, fontWeight: Theme.fontWeight.semibold },
 });

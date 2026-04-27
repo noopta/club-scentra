@@ -6,6 +6,7 @@ import { Theme } from '@/constants/Theme';
 import StepIndicator from '@/components/StepIndicator';
 import RedButton from '@/components/RedButton';
 import TimePicker from '@/components/TimePicker';
+import WizardHeader from '@/components/WizardHeader';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -84,6 +85,7 @@ export default function CreateEventScheduleScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <WizardHeader title="New Event" />
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <StepIndicator totalSteps={4} currentStep={3} />
 
@@ -140,23 +142,30 @@ export default function CreateEventScheduleScreen() {
               <Text style={styles.monthLabel}>{MONTHS[viewMonth]} {viewYear}</Text>
               <TouchableOpacity onPress={nextMonth} style={styles.navBtn}><Ionicons name="chevron-forward" size={22} color={Theme.colors.textPrimary} /></TouchableOpacity>
             </View>
-            <View style={styles.dayRow}>{DAYS.map(d => <Text key={d} style={styles.dayLabel}>{d}</Text>)}</View>
+            <View style={styles.dayRow}>
+              {DAYS.map(d => (
+                <View key={d} style={styles.dayLabelWrap}>
+                  <Text style={styles.dayLabel}>{d}</Text>
+                </View>
+              ))}
+            </View>
             <View style={styles.grid}>
               {cells.map((day, i) => {
-                if (day === null) return <View key={`e-${i}`} style={styles.cell} />;
+                if (day === null) return <View key={`e-${i}`} style={styles.cellWrap} />;
                 const thisDate = new Date(viewYear, viewMonth, day);
                 const isSelected = selectedDate?.toDateString() === thisDate.toDateString();
                 const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
                 const isToday = thisDate.toDateString() === today.toDateString();
                 return (
-                  <TouchableOpacity
-                    key={day}
-                    style={[styles.cell, isSelected && styles.cellSelected, isToday && !isSelected && styles.cellToday, isPast && styles.cellPast]}
-                    onPress={() => !isPast && handleDayPress(day)}
-                    disabled={isPast}
-                  >
-                    <Text style={[styles.cellText, isSelected && styles.cellTextSelected, isToday && !isSelected && styles.cellTextToday, isPast && styles.cellTextPast]}>{day}</Text>
-                  </TouchableOpacity>
+                  <View key={day} style={styles.cellWrap}>
+                    <TouchableOpacity
+                      style={[styles.cell, isSelected && styles.cellSelected, isToday && !isSelected && styles.cellToday, isPast && styles.cellPast]}
+                      onPress={() => !isPast && handleDayPress(day)}
+                      disabled={isPast}
+                    >
+                      <Text style={[styles.cellText, isSelected && styles.cellTextSelected, isToday && !isSelected && styles.cellTextToday, isPast && styles.cellTextPast]}>{day}</Text>
+                    </TouchableOpacity>
+                  </View>
                 );
               })}
             </View>
@@ -192,7 +201,7 @@ export default function CreateEventScheduleScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Theme.colors.background },
-  scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.xxl, paddingBottom: Theme.spacing.xxl },
+  scrollContent: { paddingHorizontal: Theme.spacing.xl, paddingTop: Theme.spacing.md, paddingBottom: Theme.spacing.xxl },
   title: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary, textAlign: 'center', marginBottom: Theme.spacing.xs },
   subtitle: { fontSize: Theme.fontSize.md, color: Theme.colors.textSecondary, textAlign: 'center', marginBottom: Theme.spacing.lg },
   errorBanner: { backgroundColor: '#FFF0F0', borderRadius: Theme.borderRadius.md, borderWidth: 1, borderColor: '#FFCDD2', padding: Theme.spacing.md, marginBottom: Theme.spacing.md },
@@ -210,9 +219,11 @@ const styles = StyleSheet.create({
   navBtn: { padding: Theme.spacing.sm },
   monthLabel: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: Theme.colors.textPrimary },
   dayRow: { flexDirection: 'row', marginBottom: 8 },
-  dayLabel: { flex: 1, textAlign: 'center', fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.medium },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  cell: { width: '14.28%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 100 },
+  dayLabelWrap: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 4 },
+  dayLabel: { fontSize: Theme.fontSize.xs, color: Theme.colors.textSecondary, fontWeight: Theme.fontWeight.semibold, letterSpacing: 0.5 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 4 },
+  cellWrap: { width: `${100 / 7}%`, padding: 3, alignItems: 'center', justifyContent: 'center' },
+  cell: { width: '100%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 100 },
   cellSelected: { backgroundColor: Theme.colors.primary },
   cellToday: { borderWidth: 1.5, borderColor: Theme.colors.primary },
   cellPast: { opacity: 0.3 },
