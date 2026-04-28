@@ -40,6 +40,41 @@ export async function getOrCreateDirectConversation(userId: string, otherUserId:
   return conv;
 }
 
+export async function createGroupConversation(
+  creatorId: string,
+  memberIds: string[],
+  name?: string
+) {
+  if (memberIds.length < 2) throw new HttpError(400, 'Group must have at least 2 other members');
+  if (memberIds.includes(creatorId)) throw new HttpError(400, 'Creator should not be in memberIds');
+
+  const allParticipantIds = [creatorId, ...memberIds];
+
+  const conv = await prisma.conversation.create({
+    data: {
+      type: ConversationType.GROUP,
+      name: name?.trim() || null,
+      participants: {
+        create: allParticipantIds.map((userId) => ({ userId })),
+      },
+    },
+    include: {
+      participants: {
+        include: {
+          user: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
+        },
+      },
+    },
+  });
+
+  return {
+    id: conv.id,
+    type: conv.type,
+    name: conv.name,
+    participants: conv.participants.map((p) => ({ user: p.user })),
+  };
+}
+
 export async function listConversations(userId: string) {
   const parts = await prisma.conversationParticipant.findMany({
     where: { userId },

@@ -1,18 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Platform } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import { useTheme } from '@/lib/ThemeContext';
-
-const CONTACTS = [
-  { id: '1', username: 'LukeH', name: 'Luke Homes', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200' },
-  { id: '2', username: 'MaxDrift99', name: 'Max Chen', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200' },
-  { id: '3', username: 'TurboTina', name: 'Tina Park', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200' },
-  { id: '4', username: 'Adi10', name: 'Adi Rahman', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200' },
-  { id: '5', username: 'JDMQueen', name: 'Priya Sharma', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200' },
-  { id: '6', username: 'V8_Victor', name: 'Victor Santos', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200' },
-];
+import { friends as friendsApi, messages as messagesApi, PublicUser } from '@/lib/api';
 
 export default function CreateGroupScreen() {
   const { colors } = useTheme();
@@ -22,9 +14,19 @@ export default function CreateGroupScreen() {
   const [groupName, setGroupName] = useState('');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
+  const [contacts, setContacts] = useState<PublicUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
 
-  const filtered = CONTACTS.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
+  useEffect(() => {
+    friendsApi.list()
+      .then((res) => setContacts(res.friends))
+      .catch(() => setContacts([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = contacts.filter(c =>
+    (c.displayName ?? '').toLowerCase().includes(search.toLowerCase()) ||
     c.username.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -32,8 +34,24 @@ export default function CreateGroupScreen() {
     setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const handleCreate = () => {
-    router.back();
+  const handleCreate = async () => {
+    if (selected.length < 2 || creating) return;
+    setCreating(true);
+    try {
+      const conv = await messagesApi.createGroup(selected, groupName.trim() || undefined);
+      router.replace({
+        pathname: '/chat',
+        params: {
+          id: conv.id,
+          name: conv.name || 'Group Chat',
+          isGroup: '1',
+        },
+      });
+    } catch (err: unknown) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'Could not create group');
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -44,13 +62,17 @@ export default function CreateGroupScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>New Group</Text>
         <TouchableOpacity
-          style={[styles.createBtn, selected.length < 2 && styles.createBtnDisabled]}
+          style={[styles.createBtn, (selected.length < 2 || creating) && styles.createBtnDisabled]}
           onPress={handleCreate}
-          disabled={selected.length < 2}
+          disabled={selected.length < 2 || creating}
         >
-          <Text style={[styles.createBtnText, selected.length < 2 && styles.createBtnTextDisabled]}>
-            Create
-          </Text>
+          {creating ? (
+            <ActivityIndicator size="small" color={Theme.colors.white} />
+          ) : (
+            <Text style={[styles.createBtnText, selected.length < 2 && styles.createBtnTextDisabled]}>
+              Create
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -74,9 +96,15 @@ export default function CreateGroupScreen() {
           style={styles.selectedRow}
           contentContainerStyle={styles.selectedRowContent}
         >
-          {CONTACTS.filter(c => selected.includes(c.id)).map(c => (
+          {contacts.filter(c => selected.includes(c.id)).map(c => (
             <TouchableOpacity key={c.id} style={styles.selectedChip} onPress={() => toggle(c.id)}>
-              <Image source={{ uri: c.avatar }} style={styles.chipAvatar} />
+              {c.avatarUrl ? (
+                <Image source={{ uri: c.avatarUrl }} style={styles.chipAvatar} />
+              ) : (
+                <View style={[styles.chipAvatar, styles.chipAvatarPlaceholder]}>
+                  <Text style={styles.chipAvatarText}>{(c.displayName ?? c.username).charAt(0).toUpperCase()}</Text>
+                </View>
+              )}
               <Text style={styles.chipName}>{c.username}</Text>
               <Ionicons name="close-circle" size={16} color={Theme.colors.primary} />
             </TouchableOpacity>
@@ -97,28 +125,44 @@ export default function CreateGroupScreen() {
 
       <Text style={styles.sectionLabel}>Add Members ({selected.length} selected)</Text>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {filtered.map(contact => {
-          const isSelected = selected.includes(contact.id);
-          return (
-            <TouchableOpacity
-              key={contact.id}
-              style={styles.contactRow}
-              onPress={() => toggle(contact.id)}
-              activeOpacity={0.7}
-            >
-              <Image source={{ uri: contact.avatar }} style={styles.contactAvatar} />
-              <View style={styles.contactInfo}>
-                <Text style={styles.contactName}>{contact.name}</Text>
-                <Text style={styles.contactUsername}>@{contact.username}</Text>
-              </View>
-              <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                {isSelected && <Ionicons name="checkmark" size={16} color={Theme.colors.white} />}
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      {loading ? (
+        <ActivityIndicator color={Theme.colors.primary} style={{ marginTop: 40 }} />
+      ) : contacts.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="people-outline" size={48} color={Theme.colors.textMuted} />
+          <Text style={styles.emptyText}>No friends yet</Text>
+          <Text style={styles.emptySubtext}>Add friends first to create a group chat</Text>
+        </View>
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {filtered.map(contact => {
+            const isSelected = selected.includes(contact.id);
+            return (
+              <TouchableOpacity
+                key={contact.id}
+                style={styles.contactRow}
+                onPress={() => toggle(contact.id)}
+                activeOpacity={0.7}
+              >
+                {contact.avatarUrl ? (
+                  <Image source={{ uri: contact.avatarUrl }} style={styles.contactAvatar} />
+                ) : (
+                  <View style={[styles.contactAvatar, styles.contactAvatarPlaceholder]}>
+                    <Ionicons name="person" size={20} color={Theme.colors.textMuted} />
+                  </View>
+                )}
+                <View style={styles.contactInfo}>
+                  <Text style={styles.contactName}>{contact.displayName ?? contact.username}</Text>
+                  <Text style={styles.contactUsername}>@{contact.username}</Text>
+                </View>
+                <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+                  {isSelected && <Ionicons name="checkmark" size={16} color={Theme.colors.white} />}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -211,6 +255,8 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
     borderColor: c.primary,
   },
   chipAvatar: { width: 24, height: 24, borderRadius: 12 },
+  chipAvatarPlaceholder: { backgroundColor: c.border, alignItems: 'center', justifyContent: 'center' },
+  chipAvatarText: { fontSize: 10, fontWeight: Theme.fontWeight.bold, color: c.textSecondary },
   chipName: { fontSize: Theme.fontSize.xs, color: c.primary, fontWeight: Theme.fontWeight.medium },
   searchRow: {
     flexDirection: 'row',
@@ -246,6 +292,10 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
     borderBottomColor: c.border,
   },
   contactAvatar: { width: 46, height: 46, borderRadius: 23, marginRight: Theme.spacing.md },
+  contactAvatarPlaceholder: { backgroundColor: c.border, alignItems: 'center', justifyContent: 'center' },
+  emptyState: { alignItems: 'center', paddingVertical: Theme.spacing.xxl },
+  emptyText: { fontSize: Theme.fontSize.md, color: c.textSecondary, marginTop: Theme.spacing.md },
+  emptySubtext: { fontSize: Theme.fontSize.sm, color: c.textMuted, marginTop: Theme.spacing.xs },
   contactInfo: { flex: 1 },
   contactName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.medium, color: c.textPrimary },
   contactUsername: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginTop: 2 },

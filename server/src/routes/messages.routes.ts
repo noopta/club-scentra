@@ -29,6 +29,24 @@ router.post(
   })
 );
 
+router.post(
+  '/conversations/group',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const schema = z.object({
+      memberIds: z.array(z.string().min(10)).min(2),
+      name: z.string().max(100).optional(),
+    });
+    const { memberIds, name } = schema.parse(req.body);
+    const conv = await messagesService.createGroupConversation(
+      (req as AuthedRequest).userId,
+      memberIds,
+      name
+    );
+    res.status(201).json(conv);
+  })
+);
+
 router.get(
   '/conversations/:id/messages',
   requireAuth,

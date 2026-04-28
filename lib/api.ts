@@ -324,6 +324,12 @@ export const messages = {
       body: JSON.stringify({ otherUserId }),
     }),
 
+  createGroup: (memberIds: string[], name?: string) =>
+    request<Conversation>('/messages/conversations/group', {
+      method: 'POST',
+      body: JSON.stringify({ memberIds, name }),
+    }),
+
   getMessages: (conversationId: string, cursor?: string) => {
     const qs = cursor ? `?cursor=${cursor}` : '';
     return request<{ messages: Message[] }>(`/messages/conversations/${conversationId}/messages${qs}`);

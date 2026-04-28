@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,14 +39,36 @@ export default function MeetsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [savedModalVisible, setSavedModalVisible] = useState(false);
 
+  const parseDateFilter = (dateStr: string): string | undefined => {
+    if (!dateStr) return undefined;
+    const currentYear = new Date().getFullYear();
+    const parsed = new Date(`${dateStr} ${currentYear}`);
+    if (isNaN(parsed.getTime())) return undefined;
+    parsed.setHours(0, 0, 0, 0);
+    return parsed.toISOString();
+  };
+
   const fetchAll = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     try {
+      const filterParams: Parameters<typeof meetsApi.getSection>[1] = {};
+      if (searchText) filterParams.q = searchText;
+      if (locationFilter) filterParams.location = locationFilter;
+      if (dateFilter) {
+        const dateFrom = parseDateFilter(dateFilter);
+        if (dateFrom) {
+          filterParams.dateFrom = dateFrom;
+          const dateTo = new Date(dateFrom);
+          dateTo.setDate(dateTo.getDate() + 1);
+          filterParams.dateTo = dateTo.toISOString();
+        }
+      }
+
       const [h, g, s, p] = await Promise.all([
-        meetsApi.getSection('hosting'),
-        meetsApi.getSection('going'),
-        meetsApi.getSection('saved'),
-        meetsApi.getSection('past'),
+        meetsApi.getSection('hosting', filterParams),
+        meetsApi.getSection('going', filterParams),
+        meetsApi.getSection('saved', filterParams),
+        meetsApi.getSection('past', filterParams),
       ]);
       setHostedEvents(h.events);
       setGoingEvents(g.events);
@@ -58,9 +80,14 @@ export default function MeetsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [searchText, locationFilter, dateFilter]);
 
   useFocusEffect(useCallback(() => { fetchAll(); }, [fetchAll]));
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchAll(), 400);
+    return () => clearTimeout(timer);
+  }, [searchText, locationFilter, dateFilter]);
 
   return (
     <View style={styles.container}>

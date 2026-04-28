@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Image, TextInput,
   ActivityIndicator, ScrollView, Platform, KeyboardAvoidingView,
@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Theme } from '@/constants/Theme';
 import { useTheme } from '@/lib/ThemeContext';
-import { uploads, social } from '@/lib/api';
+import { uploads, social, events as eventsApi, Event } from '@/lib/api';
 
 export default function CreatePostScreen() {
   const { colors } = useTheme();
@@ -25,8 +25,38 @@ export default function CreatePostScreen() {
   const [caption, setCaption] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [banner, setBanner] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
+  const [eventData, setEventData] = useState<Event | null>(null);
+  const [canPost, setCanPost] = useState(true);
+  const [timeMessage, setTimeMessage] = useState<string | null>(null);
 
   const tiedToEvent = !!params.eventId;
+
+  useEffect(() => {
+    if (!params.eventId) return;
+    eventsApi.getById(params.eventId).then((event) => {
+      setEventData(event);
+      const now = new Date();
+      const startAt = new Date(event.startAt);
+      const endAt = event.endAt ? new Date(event.endAt) : null;
+      const oneHourBeforeStart = new Date(startAt.getTime() - 60 * 60 * 1000);
+      
+      if (endAt && now > endAt) {
+        setCanPost(false);
+        setTimeMessage('This event has ended. Posting is no longer available.');
+      } else if (now < oneHourBeforeStart) {
+        setCanPost(false);
+        const timeUntil = Math.ceil((oneHourBeforeStart.getTime() - now.getTime()) / (60 * 1000));
+        const hours = Math.floor(timeUntil / 60);
+        const mins = timeUntil % 60;
+        setTimeMessage(`Posting opens ${hours > 0 ? `${hours}h ` : ''}${mins}m before the event starts.`);
+      } else {
+        setCanPost(true);
+        setTimeMessage(null);
+      }
+    }).catch(() => {
+      setCanPost(true);
+    });
+  }, [params.eventId]);
 
   const pickImage = async (source: 'library' | 'camera') => {
     setBanner(null);
@@ -115,8 +145,8 @@ export default function CreatePostScreen() {
         </Text>
         <TouchableOpacity
           onPress={handleSubmit}
-          disabled={!imageUri || submitting}
-          style={[styles.postBtn, (!imageUri || submitting) && styles.postBtnDisabled]}
+          disabled={!imageUri || submitting || !canPost}
+          style={[styles.postBtn, (!imageUri || submitting || !canPost) && styles.postBtnDisabled]}
         >
           {submitting ? (
             <ActivityIndicator color="#FFF" size="small" />
@@ -132,6 +162,13 @@ export default function CreatePostScreen() {
           <Text style={styles.eventTagText} numberOfLines={1}>
             {params.eventTitle || 'this meet'}
           </Text>
+        </View>
+      ) : null}
+
+      {timeMessage && !canPost ? (
+        <View style={[styles.banner, styles.bannerWarning]}>
+          <Ionicons name="time-outline" size={16} color="#B45309" style={{ marginRight: 8 }} />
+          <Text style={styles.bannerTextWarning}>{timeMessage}</Text>
         </View>
       ) : null}
 
@@ -218,10 +255,12 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
     borderBottomColor: c.border,
   },
   eventTagText: { color: c.primary, fontWeight: '600', fontSize: 13, flex: 1 },
-  banner: { paddingHorizontal: Theme.spacing.md, paddingVertical: 10 },
+  banner: { paddingHorizontal: Theme.spacing.md, paddingVertical: 10, flexDirection: 'row', alignItems: 'center' },
   bannerError: { backgroundColor: '#FFE5E5' },
   bannerInfo: { backgroundColor: '#E5F3FF' },
-  bannerText: { color: '#B00020', fontSize: 13, fontWeight: '500' },
+  bannerWarning: { backgroundColor: '#FEF3C7' },
+  bannerText: { color: '#B00020', fontSize: 13, fontWeight: '500', flex: 1 },
+  bannerTextWarning: { color: '#B45309', fontSize: 13, fontWeight: '500', flex: 1 },
   scrollBody: { padding: Theme.spacing.md, paddingBottom: 40 },
   pickerCard: {
     backgroundColor: c.white,

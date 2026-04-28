@@ -6,6 +6,7 @@ import {
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { events as eventsApi, EventPost } from '@/lib/api';
+import { Image as ExpoImage } from 'expo-image';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 const STORY_DURATION_MS = 5000;
@@ -38,6 +39,8 @@ export default function StoriesScreen() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [isFocused, setIsFocused] = useState(true);
+  const [eventEnded, setEventEnded] = useState(false);
+  const [canAddStory, setCanAddStory] = useState(true);
   const progress = useRef(new Animated.Value(0)).current;
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
 
@@ -45,8 +48,25 @@ export default function StoriesScreen() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await eventsApi.getPosts(params.eventId);
-        const mapped: Story[] = res.posts.map((p: EventPost) => ({
+        const [postsRes, eventData] = await Promise.all([
+          eventsApi.getPosts(params.eventId),
+          eventsApi.getById(params.eventId),
+        ]);
+
+        const now = new Date();
+        const startAt = new Date(eventData.startAt);
+        const endAt = eventData.endAt ? new Date(eventData.endAt) : null;
+        const oneHourBeforeStart = new Date(startAt.getTime() - 60 * 60 * 1000);
+        
+        const isEnded = endAt ? now > endAt : false;
+        const canPost = !isEnded && now >= oneHourBeforeStart;
+        
+        if (!cancelled) {
+          setEventEnded(isEnded);
+          setCanAddStory(canPost);
+        }
+
+        const mapped: Story[] = postsRes.posts.map((p: EventPost) => ({
           id: p.id,
           imageUrl: p.imageUrl,
           caption: p.caption,
@@ -60,7 +80,9 @@ export default function StoriesScreen() {
           mapped.push({
             id: 'cover',
             imageUrl: params.eventImage,
-            caption: 'Be the first to share a moment from this meet',
+            caption: isEnded 
+              ? 'This event has ended' 
+              : 'Be the first to share a moment from this meet',
             authorName: params.eventTitle || 'Event',
             authorAvatar: null,
             createdAt: new Date().toISOString(),
@@ -84,15 +106,38 @@ export default function StoriesScreen() {
     }, [])
   );
 
-  const advance = () => {
+  const isNavigating = useRef(false);
+
+  const safeGoBack = useCallback(() => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    router.back();
+  }, [router]);
+
+  const advance = useCallback(() => {
     setIndex((i) => {
       if (i + 1 >= stories.length) {
-        setTimeout(() => router.back(), 0);
+        setTimeout(safeGoBack, 0);
         return i;
       }
       return i + 1;
     });
-  };
+  }, [stories.length, safeGoBack]);
+
+  useEffect(() => {
+    if (stories.length <= 1) return;
+    const nextIndex = Math.min(index + 1, stories.length - 1);
+    const nextStory = stories[nextIndex];
+    if (nextStory && nextStory.imageUrl) {
+      ExpoImage.prefetch(nextStory.imageUrl);
+    }
+    if (nextIndex + 1 < stories.length) {
+      const futureStory = stories[nextIndex + 1];
+      if (futureStory?.imageUrl) {
+        ExpoImage.prefetch(futureStory.imageUrl);
+      }
+    }
+  }, [index, stories]);
 
   useEffect(() => {
     if (loading || stories.length === 0 || paused || !isFocused) return;
@@ -107,12 +152,13 @@ export default function StoriesScreen() {
     return () => { anim.stop(); };
   }, [index, loading, stories.length, paused, isFocused]);
 
-  const handleTapLeft = () => {
+  const handleTapLeft = useCallback(() => {
     if (index > 0) setIndex(index - 1);
-  };
-  const handleTapRight = () => {
+  }, [index]);
+  
+  const handleTapRight = useCallback(() => {
     advance();
-  };
+  }, [advance]);
 
   if (loading) {
     return (
@@ -128,7 +174,7 @@ export default function StoriesScreen() {
       <View style={[s.container, s.center]}>
         <StatusBar barStyle="light-content" />
         <Text style={s.emptyText}>No stories yet for this meet</Text>
-        <TouchableOpacity style={s.closeBtnEmpty} onPress={() => router.back()}>
+        <TouchableOpacity style={s.closeBtnEmpty} onPress={safeGoBack}>
           <Text style={s.closeBtnText}>Close</Text>
         </TouchableOpacity>
       </View>
@@ -141,7 +187,7 @@ export default function StoriesScreen() {
     <View style={s.container}>
       <StatusBar barStyle="light-content" />
 
-      <Image source={{ uri: story.imageUrl }} style={s.bgImage} resizeMode="cover" />
+      <ExpoImage source={{ uri: story.imageUrl }} style={s.bgImage} contentFit="cover" transition={200} />
       <View style={s.dim} />
 
       <View style={s.topBar}>
@@ -178,21 +224,23 @@ export default function StoriesScreen() {
             <Text style={s.authorName} numberOfLines={1}>{story.authorName}</Text>
             <Text style={s.timeText}>{timeAgo(story.createdAt)}{params.eventTitle ? ` · ${params.eventTitle}` : ''}</Text>
           </View>
-          <TouchableOpacity
-            style={s.addBtn}
-            onPress={() => router.push({
-              pathname: '/create-post',
-              params: {
-                eventId: params.eventId,
-                eventTitle: params.eventTitle,
-                eventImage: params.eventImage,
-              },
-            })}
-            hitSlop={10}
-          >
-            <Ionicons name="add-circle-outline" size={28} color="#FFF" />
-          </TouchableOpacity>
-          <TouchableOpacity style={s.closeBtn} onPress={() => router.back()} hitSlop={10}>
+          {canAddStory && (
+            <TouchableOpacity
+              style={s.addBtn}
+              onPress={() => router.push({
+                pathname: '/create-post',
+                params: {
+                  eventId: params.eventId,
+                  eventTitle: params.eventTitle,
+                  eventImage: params.eventImage,
+                },
+              })}
+              hitSlop={10}
+            >
+              <Ionicons name="add-circle-outline" size={28} color="#FFF" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={s.closeBtn} onPress={safeGoBack} hitSlop={10}>
             <Ionicons name="close" size={28} color="#FFF" />
           </TouchableOpacity>
         </View>

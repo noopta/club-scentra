@@ -130,13 +130,18 @@ export async function explore(params: {
 
   if (params.location?.trim()) {
     const loc = params.location.trim();
-    andParts.push({
-      OR: [
-        { city: { contains: loc, mode: 'insensitive' } },
-        { region: { contains: loc, mode: 'insensitive' } },
-        { addressLine: { contains: loc, mode: 'insensitive' } },
-      ],
-    });
+    const locParts = loc.split(',').map(p => p.trim()).filter(Boolean);
+    const cityPart = locParts[0] || loc;
+    const regionPart = locParts[1] || '';
+    
+    const orConditions: Prisma.EventWhereInput[] = [
+      { city: { contains: cityPart, mode: 'insensitive' } },
+      { addressLine: { contains: cityPart, mode: 'insensitive' } },
+    ];
+    if (regionPart) {
+      orConditions.push({ region: { contains: regionPart, mode: 'insensitive' } });
+    }
+    andParts.push({ OR: orConditions });
   }
 
   if (params.q?.trim()) {
@@ -238,12 +243,18 @@ export async function getMeets(
     );
   };
 
-  const locMatch = (e: { city: string | null; region: string | null }) => {
+  const locMatch = (e: { city: string | null; region: string | null; addressLine?: string | null }) => {
     if (!filters.location?.trim()) return true;
-    const l = filters.location.trim().toLowerCase();
-    return (
-      e.city?.toLowerCase().includes(l) || e.region?.toLowerCase().includes(l) || false
-    );
+    const loc = filters.location.trim().toLowerCase();
+    const locParts = loc.split(',').map(p => p.trim()).filter(Boolean);
+    const cityPart = locParts[0] || loc;
+    const regionPart = locParts[1] || '';
+    
+    const cityMatch = e.city?.toLowerCase().includes(cityPart) ?? false;
+    const regionMatch = regionPart ? (e.region?.toLowerCase().includes(regionPart) ?? false) : true;
+    const addressMatch = (e.addressLine?.toLowerCase().includes(cityPart) ?? false);
+    
+    return cityMatch || addressMatch || (regionPart && regionMatch);
   };
 
   if (section === 'hosting') {

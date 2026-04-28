@@ -95,10 +95,16 @@ export default function EventDetailScreen() {
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
-          {event.imageUrl ? (
-            <Image source={{ uri: event.imageUrl }} style={styles.heroImage} />
+          {event.imageUrl && event.imageUrl.length > 0 ? (
+            <Image 
+              source={{ uri: event.imageUrl }} 
+              style={styles.heroImage} 
+              resizeMode="cover"
+            />
           ) : (
-            <View style={[styles.heroImage, { backgroundColor: Theme.colors.border }]} />
+            <View style={[styles.heroImage, styles.imagePlaceholder]}>
+              <Ionicons name="image-outline" size={48} color={Theme.colors.textMuted} />
+            </View>
           )}
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color={Theme.colors.white} />
@@ -191,6 +197,7 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.background },
   imageContainer: { position: 'relative' },
   heroImage: { width: '100%', height: 250 },
+  imagePlaceholder: { backgroundColor: c.border, alignItems: 'center', justifyContent: 'center' },
   backButton: { position: 'absolute', top: 50, left: Theme.spacing.md, backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 20, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   content: { padding: Theme.spacing.lg },
   eventName: { fontSize: Theme.fontSize.xxxl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.md },

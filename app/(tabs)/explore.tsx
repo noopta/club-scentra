@@ -33,12 +33,30 @@ export default function ExploreScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const parseDateFilter = (dateStr: string): string | undefined => {
+    if (!dateStr) return undefined;
+    const currentYear = new Date().getFullYear();
+    const parsed = new Date(`${dateStr} ${currentYear}`);
+    if (isNaN(parsed.getTime())) return undefined;
+    parsed.setHours(0, 0, 0, 0);
+    return parsed.toISOString();
+  };
+
   const fetchEvents = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     try {
       const params: Parameters<typeof eventsApi.explore>[0] = {};
       if (searchText) params.q = searchText;
       if (locationFilter) params.location = locationFilter;
+      if (dateFilter) {
+        const dateFrom = parseDateFilter(dateFilter);
+        if (dateFrom) {
+          params.dateFrom = dateFrom;
+          const dateTo = new Date(dateFrom);
+          dateTo.setDate(dateTo.getDate() + 1);
+          params.dateTo = dateTo.toISOString();
+        }
+      }
       const res = await eventsApi.explore(params);
       setAllEvents(res.events);
     } catch {
@@ -47,7 +65,7 @@ export default function ExploreScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [searchText, locationFilter]);
+  }, [searchText, locationFilter, dateFilter]);
 
   useEffect(() => {
     const timer = setTimeout(() => fetchEvents(), 400);
