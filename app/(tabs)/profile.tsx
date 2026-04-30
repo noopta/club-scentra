@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Platform, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Platform, ActivityIndicator, RefreshControl, Animated } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
@@ -19,6 +19,19 @@ export default function ProfileScreen() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (postModalVisible) {
+      Animated.timing(overlayOpacity, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      overlayOpacity.setValue(0);
+    }
+  }, [postModalVisible]);
 
   const loadData = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
@@ -85,7 +98,10 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <Modal visible={postModalVisible} transparent animationType="slide" onRequestClose={() => setPostModalVisible(false)}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setPostModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <Animated.View style={[styles.modalOverlay, { opacity: overlayOpacity }]}>
+            <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setPostModalVisible(false)} />
+          </Animated.View>
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Create Post</Text>
@@ -127,7 +143,7 @@ export default function ProfileScreen() {
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
@@ -144,7 +160,8 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   editButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.white },
   shareButton: { flex: 1, backgroundColor: '#2F3137', borderRadius: Theme.borderRadius.sm, paddingVertical: 12, alignItems: 'center' },
   shareButtonText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.white },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  modalContainer: { flex: 1, justifyContent: 'flex-end' },
+  modalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
   modalSheet: { backgroundColor: c.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40 },
   modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: c.border, alignSelf: 'center', marginBottom: Theme.spacing.md },
   modalTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.lg },

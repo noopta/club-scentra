@@ -20,7 +20,12 @@ type Suggestion = {
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 function formatCombined(s: { address: string; city: string; region: string; postalCode: string }): string {
-  return [s.address, s.city, s.region, s.postalCode].filter(Boolean).join(', ');
+  const parts: string[] = [];
+  if (s.address) parts.push(s.address);
+  if (s.city && s.city.toLowerCase() !== s.address?.toLowerCase()) parts.push(s.city);
+  if (s.region) parts.push(s.region);
+  if (s.postalCode) parts.push(s.postalCode);
+  return parts.join(', ');
 }
 
 export default function CreateEventLocationScreen() {
@@ -50,10 +55,13 @@ export default function CreateEventLocationScreen() {
         const road = a.road ?? a.pedestrian ?? a.path ?? '';
         const houseNumber = a.house_number ?? '';
         const streetLine = [houseNumber, road].filter(Boolean).join(' ');
+        const city = a.city ?? a.town ?? a.village ?? a.municipality ?? '';
+        const displayFirst = String(item.display_name ?? '').split(',')[0].trim();
+        const addressValue = streetLine || (displayFirst.toLowerCase() !== city.toLowerCase() ? displayFirst : '');
         return {
           display: String(item.display_name ?? ''),
-          address: streetLine || String(item.display_name ?? '').split(',')[0],
-          city: a.city ?? a.town ?? a.village ?? a.municipality ?? '',
+          address: addressValue,
+          city,
           region: a.state ?? a.province ?? '',
           postalCode: a.postcode ?? '',
         };
