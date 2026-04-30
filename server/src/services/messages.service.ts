@@ -137,19 +137,16 @@ export async function listConversations(userId: string) {
   });
 
   return convs.map((c) => {
-    const other =
-      c.type === ConversationType.DIRECT
-        ? c.participants.find((p) => p.userId !== userId)?.user
-        : null;
     const last = c.messages[0];
     return {
       id: c.id,
       type: c.type,
-      name: c.name ?? other?.displayName ?? other?.username ?? 'Chat',
-      otherUser: other,
-      lastMessage: last
-        ? { body: last.body, createdAt: last.createdAt.toISOString(), senderId: last.senderId }
-        : null,
+      name: c.name,
+      updatedAt: c.updatedAt.toISOString(),
+      participants: c.participants.map((p) => ({ user: p.user })),
+      messages: last
+        ? [{ id: last.id, body: last.body, createdAt: last.createdAt.toISOString(), senderId: last.senderId }]
+        : [],
     };
   });
 }
