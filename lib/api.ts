@@ -332,27 +332,27 @@ export const friends = {
 };
 
 export const messages = {
-  conversations: () => request<{ conversations: Conversation[] }>('/messages/conversations'),
+  conversations: () => request<{ conversations: Conversation[] }>('/conversations'),
 
   startDirect: (otherUserId: string) =>
-    request<Conversation>('/messages/conversations/direct', {
+    request<Conversation>('/conversations/direct', {
       method: 'POST',
       body: JSON.stringify({ otherUserId }),
     }),
 
   createGroup: (memberIds: string[], name?: string) =>
-    request<Conversation>('/messages/conversations/group', {
+    request<Conversation>('/conversations/group', {
       method: 'POST',
       body: JSON.stringify({ memberIds, name }),
     }),
 
   getMessages: (conversationId: string, cursor?: string) => {
     const qs = cursor ? `?cursor=${cursor}` : '';
-    return request<{ messages: Message[] }>(`/messages/conversations/${conversationId}/messages${qs}`);
+    return request<{ messages: Message[] }>(`/conversations/${conversationId}/messages${qs}`);
   },
 
   sendMessage: (conversationId: string, body: string) =>
-    request<Message>(`/messages/conversations/${conversationId}/messages`, {
+    request<Message>(`/conversations/${conversationId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ body }),
     }),
