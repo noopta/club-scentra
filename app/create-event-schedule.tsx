@@ -37,7 +37,7 @@ export default function CreateEventScheduleScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     title: string; description: string;
-    addressLine: string; city: string; region: string; postalCode: string; additionalInfo: string;
+    addressLine: string; city: string; region: string; postalCode: string; country: string; additionalInfo: string;
   }>();
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);

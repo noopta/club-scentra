@@ -128,11 +128,10 @@ export async function listFriends(userId: string) {
   return users.map((u) => ({
     id: u.id,
     username: u.username,
-    name: u.displayName ?? u.username,
-    car: null as string | null,
-    location: null as string | null,
-    avatar: u.avatarUrl,
-    followers: u._count.followers,
+    displayName: u.displayName,
+    bio: u.bio,
+    avatarUrl: u.avatarUrl,
+    followersCount: u._count.followers,
   }));
 }
 

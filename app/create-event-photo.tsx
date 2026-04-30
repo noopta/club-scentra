@@ -17,7 +17,7 @@ export default function CreateEventPhotoScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     title: string; description: string;
-    addressLine: string; city: string; region: string; postalCode: string;
+    addressLine: string; city: string; region: string; postalCode: string; country: string;
     startAt: string; endAt: string;
   }>();
 
@@ -85,6 +85,7 @@ export default function CreateEventPhotoScreen() {
         city: params.city || undefined,
         region: params.region || undefined,
         postalCode: params.postalCode || undefined,
+        country: params.country || undefined,
         imageUrl: imageUrl ?? null,
       };
       console.log('[create-event] POST /events payload:', payload);

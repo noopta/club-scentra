@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
@@ -29,8 +29,9 @@ export default function ChatScreen() {
     try {
       const res = await messagesApi.getMessages(id);
       setMessages(res.messages);
-    } catch {
+    } catch (err) {
       setMessages([]);
+      Alert.alert('Error', err instanceof Error ? err.message : 'Could not load messages');
     } finally {
       setLoading(false);
     }
@@ -53,8 +54,9 @@ export default function ChatScreen() {
       const sent = await messagesApi.sendMessage(id, body);
       setMessages(prev => [...prev, sent]);
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
-    } catch {
+    } catch (err) {
       setText(body);
+      Alert.alert('Error', err instanceof Error ? err.message : 'Could not send message');
     } finally {
       setSending(false);
     }

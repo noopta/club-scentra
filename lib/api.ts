@@ -145,6 +145,7 @@ export type Event = {
   goingCount: number;
   interestedCount: number;
   viewerStatus: 'GOING' | 'INTERESTED' | null;
+  cancelledAt?: string | null;
 };
 
 export type Conversation = {
@@ -266,6 +267,9 @@ export const events = {
 
   getAttendees: (id: string) =>
     request<{ going: PublicUser[]; interested: PublicUser[] }>(`/events/${id}/attendees`),
+
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/events/${id}`, { method: 'DELETE' }),
 
   getPosts: async (
     id: string,

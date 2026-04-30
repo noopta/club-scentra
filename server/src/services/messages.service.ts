@@ -27,7 +27,32 @@ export async function getOrCreateDirectConversation(userId: string, otherUserId:
   if (userId === otherUserId) throw new HttpError(400, 'Invalid conversation');
 
   const existing = await findDirectConversation(userId, otherUserId);
-  if (existing) return existing;
+  if (existing) {
+    const full = await prisma.conversation.findUnique({
+      where: { id: existing.id },
+      include: {
+        participants: {
+          include: {
+            user: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
+          },
+        },
+        messages: { orderBy: { createdAt: 'desc' }, take: 1 },
+      },
+    });
+    return {
+      id: full!.id,
+      type: full!.type,
+      name: full!.name,
+      updatedAt: full!.updatedAt.toISOString(),
+      participants: full!.participants.map((p) => ({ user: p.user })),
+      messages: full!.messages.map((m) => ({
+        id: m.id,
+        body: m.body,
+        createdAt: m.createdAt.toISOString(),
+        senderId: m.senderId,
+      })),
+    };
+  }
 
   const conv = await prisma.conversation.create({
     data: {
@@ -36,8 +61,23 @@ export async function getOrCreateDirectConversation(userId: string, otherUserId:
         create: [{ userId: userId }, { userId: otherUserId }],
       },
     },
+    include: {
+      participants: {
+        include: {
+          user: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
+        },
+      },
+    },
   });
-  return conv;
+  
+  return {
+    id: conv.id,
+    type: conv.type,
+    name: conv.name,
+    updatedAt: conv.updatedAt.toISOString(),
+    participants: conv.participants.map((p) => ({ user: p.user })),
+    messages: [],
+  };
 }
 
 export async function createGroupConversation(

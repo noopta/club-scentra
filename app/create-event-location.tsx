@@ -15,16 +15,17 @@ type Suggestion = {
   city: string;
   region: string;
   postalCode: string;
+  country: string;
 };
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-function formatCombined(s: { address: string; city: string; region: string; postalCode: string }): string {
+function formatCombined(s: { address: string; city: string; region: string; postalCode: string; country: string }): string {
   const parts: string[] = [];
-  if (s.address) parts.push(s.address);
-  if (s.city && s.city.toLowerCase() !== s.address?.toLowerCase()) parts.push(s.city);
+  if (s.address && s.address.toLowerCase() !== s.city?.toLowerCase()) parts.push(s.address);
+  if (s.city) parts.push(s.city);
   if (s.region) parts.push(s.region);
-  if (s.postalCode) parts.push(s.postalCode);
+  if (s.country) parts.push(s.country);
   return parts.join(', ');
 }
 
@@ -37,6 +38,11 @@ export default function CreateEventLocationScreen() {
 
   const [combined, setCombined] = useState('');
   const [resolved, setResolved] = useState<Suggestion | null>(null);
+  const [addressLine, setAddressLine] = useState('');
+  const [city, setCity] = useState('');
+  const [region, setRegion] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [country, setCountry] = useState('');
   const [additionalInfo, setAdditionalInfo] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -64,6 +70,7 @@ export default function CreateEventLocationScreen() {
           city,
           region: a.state ?? a.province ?? '',
           postalCode: a.postcode ?? '',
+          country: a.country ?? '',
         };
       });
       setSuggestions(mapped);
@@ -86,18 +93,32 @@ export default function CreateEventLocationScreen() {
   const handleSelect = (item: Suggestion) => {
     setResolved(item);
     setCombined(formatCombined(item));
+    setAddressLine(item.address);
+    setCity(item.city);
+    setRegion(item.region);
+    setPostalCode(item.postalCode);
+    setCountry(item.country);
     setShowSuggestions(false);
     setSuggestions([]);
   };
 
+  const handleFieldChange = (field: keyof Suggestion, value: string) => {
+    switch (field) {
+      case 'address': setAddressLine(value); break;
+      case 'city': setCity(value); break;
+      case 'region': setRegion(value); break;
+      case 'postalCode': setPostalCode(value); break;
+      case 'country': setCountry(value); break;
+    }
+    if (resolved) {
+      setResolved({ ...resolved, [field]: value });
+    }
+  };
+
   const handleNext = () => {
     setErrorMsg('');
-    if (!resolved) {
-      setErrorMsg('Please pick an address from the suggestions so we can fill in city, region, and postal code.');
-      return;
-    }
-    if (!resolved.address.trim() || !resolved.city.trim()) {
-      setErrorMsg('That address is missing a city. Please pick another suggestion.');
+    if (!city.trim()) {
+      setErrorMsg('City is required. Please enter a city or pick a suggestion.');
       return;
     }
     router.push({
@@ -105,10 +126,11 @@ export default function CreateEventLocationScreen() {
       params: {
         title: params.title,
         description: params.description,
-        addressLine: resolved.address.trim(),
-        city: resolved.city.trim(),
-        region: resolved.region.trim(),
-        postalCode: resolved.postalCode.trim(),
+        addressLine: addressLine.trim(),
+        city: city.trim(),
+        region: region.trim(),
+        postalCode: postalCode.trim(),
+        country: country.trim(),
         additionalInfo: additionalInfo.trim(),
       },
     });
@@ -186,7 +208,7 @@ export default function CreateEventLocationScreen() {
                         {item.address || item.display.split(',')[0]}
                       </Text>
                       <Text style={styles.suggestionSub} numberOfLines={1}>
-                        {[item.city, item.region, item.postalCode].filter(Boolean).join(', ')}
+                        {[item.city, item.region, item.country].filter(Boolean).join(', ')}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -194,6 +216,70 @@ export default function CreateEventLocationScreen() {
               </View>
             )}
           </View>
+
+          {(resolved || city) && (
+            <View style={styles.fieldsContainer}>
+              <Text style={styles.fieldsTitle}>Location Details</Text>
+              <Text style={styles.fieldsSubtitle}>Auto-filled from selection. Edit if needed.</Text>
+              
+              <View style={styles.fieldRow}>
+                <Text style={styles.fieldLabel}>Street Address</Text>
+                <TextInput
+                  style={styles.fieldInput}
+                  value={addressLine}
+                  onChangeText={(v) => handleFieldChange('address', v)}
+                  placeholder="Street address (optional)"
+                  placeholderTextColor={Theme.colors.textMuted}
+                />
+              </View>
+
+              <View style={styles.fieldRowDouble}>
+                <View style={styles.fieldHalf}>
+                  <Text style={styles.fieldLabel}>City *</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={city}
+                    onChangeText={(v) => handleFieldChange('city', v)}
+                    placeholder="City"
+                    placeholderTextColor={Theme.colors.textMuted}
+                  />
+                </View>
+                <View style={styles.fieldHalf}>
+                  <Text style={styles.fieldLabel}>Region / State</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={region}
+                    onChangeText={(v) => handleFieldChange('region', v)}
+                    placeholder="Province / State"
+                    placeholderTextColor={Theme.colors.textMuted}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.fieldRowDouble}>
+                <View style={styles.fieldHalf}>
+                  <Text style={styles.fieldLabel}>Postal Code</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={postalCode}
+                    onChangeText={(v) => handleFieldChange('postalCode', v)}
+                    placeholder="Postal / ZIP"
+                    placeholderTextColor={Theme.colors.textMuted}
+                  />
+                </View>
+                <View style={styles.fieldHalf}>
+                  <Text style={styles.fieldLabel}>Country</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={country}
+                    onChangeText={(v) => handleFieldChange('country', v)}
+                    placeholder="Country"
+                    placeholderTextColor={Theme.colors.textMuted}
+                  />
+                </View>
+              </View>
+            </View>
+          )}
 
           <InputField
             label="Additional Info"
@@ -259,4 +345,48 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   suggestionBorder: { borderBottomWidth: 1, borderBottomColor: c.border },
   suggestionMain: { fontSize: Theme.fontSize.sm, fontWeight: Theme.fontWeight.medium, color: c.textPrimary },
   suggestionSub: { fontSize: Theme.fontSize.xs, color: c.textSecondary, marginTop: 2 },
+  fieldsContainer: {
+    backgroundColor: c.white,
+    borderRadius: Theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: c.border,
+    padding: Theme.spacing.md,
+    marginTop: Theme.spacing.sm,
+  },
+  fieldsTitle: {
+    fontSize: Theme.fontSize.md,
+    fontWeight: Theme.fontWeight.semibold,
+    color: c.textPrimary,
+    marginBottom: 4,
+  },
+  fieldsSubtitle: {
+    fontSize: Theme.fontSize.xs,
+    color: c.textSecondary,
+    marginBottom: Theme.spacing.md,
+  },
+  fieldRow: {
+    marginBottom: Theme.spacing.sm,
+  },
+  fieldRowDouble: {
+    flexDirection: 'row',
+    gap: Theme.spacing.sm,
+    marginBottom: Theme.spacing.sm,
+  },
+  fieldHalf: {
+    flex: 1,
+  },
+  fieldLabel: {
+    fontSize: Theme.fontSize.sm,
+    fontWeight: Theme.fontWeight.medium,
+    color: c.textSecondary,
+    marginBottom: 4,
+  },
+  fieldInput: {
+    backgroundColor: c.inputBackground,
+    borderRadius: Theme.borderRadius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+    fontSize: Theme.fontSize.md,
+    color: c.textPrimary,
+  },
 });

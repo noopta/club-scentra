@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useMemo, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Theme } from '@/constants/Theme';
 import { useTheme } from '@/lib/ThemeContext';
 import StoryRing from './StoryRing';
@@ -14,33 +15,89 @@ interface EventCardProps {
   onImagePress?: () => void;
   onAddToStory?: () => void;
   variant?: 'default' | 'popular' | 'past' | 'dark';
+  isCancelled?: boolean;
+  canDelete?: boolean;
+  onDelete?: () => void;
 }
 
-export default function EventCard({ name, location, date, image, onPress, onImagePress, onAddToStory, variant = 'default' }: EventCardProps) {
+export default function EventCard({ name, location, date, image, onPress, onImagePress, onAddToStory, variant = 'default', isCancelled, canDelete, onDelete }: EventCardProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const swipeableRef = useRef<Swipeable>(null);
 
   const isPopular = variant === 'popular';
   const isPast = variant === 'past';
   const isDark = variant === 'dark';
   const useLightText = isPopular || isDark || isPast;
 
-  return (
+  const handleLongPress = () => {
+    if (!canDelete || !onDelete) return;
+    Alert.alert(
+      'Delete Event',
+      `Are you sure you want to delete "${name}"? All attendees will be notified.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: onDelete },
+      ]
+    );
+  };
+
+  const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0.5],
+      extrapolate: 'clamp',
+    });
+    return (
+      <TouchableOpacity
+        style={styles.deleteAction}
+        onPress={() => {
+          swipeableRef.current?.close();
+          Alert.alert(
+            'Delete Event',
+            `Are you sure you want to delete "${name}"? All attendees will be notified.`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Delete', style: 'destructive', onPress: onDelete },
+            ]
+          );
+        }}
+        activeOpacity={0.8}
+      >
+        <Animated.View style={{ transform: [{ scale }] }}>
+          <Ionicons name="trash-outline" size={24} color="#FFF" />
+          <Text style={styles.deleteText}>Delete</Text>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
+  const cardContent = (
     <TouchableOpacity
       style={[
         styles.card,
         isPopular && styles.popularCard,
         isPast && styles.pastCard,
         isDark && styles.darkCard,
+        isCancelled && styles.cancelledCard,
       ]}
       onPress={onPress}
+      onLongPress={canDelete ? handleLongPress : undefined}
+      delayLongPress={500}
       activeOpacity={0.8}
     >
       <View style={styles.textContainer}>
+        {isCancelled && (
+          <View style={styles.cancelledBadge}>
+            <Ionicons name="close-circle" size={12} color="#FFF" />
+            <Text style={styles.cancelledBadgeText}>Cancelled</Text>
+          </View>
+        )}
         <Text
           style={[
             styles.name,
             useLightText && styles.lightName,
+            isCancelled && styles.cancelledName,
           ]}
           numberOfLines={2}
         >
@@ -107,6 +164,21 @@ export default function EventCard({ name, location, date, image, onPress, onImag
       </TouchableOpacity>
     </TouchableOpacity>
   );
+
+  if (canDelete && onDelete) {
+    return (
+      <Swipeable
+        ref={swipeableRef}
+        renderRightActions={renderRightActions}
+        overshootRight={false}
+        friction={2}
+      >
+        {cardContent}
+      </Swipeable>
+    );
+  }
+
+  return cardContent;
 }
 
 const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
@@ -189,5 +261,45 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   },
   addStoryTextOnDark: {
     color: c.white,
+  },
+  cancelledCard: {
+    opacity: 0.7,
+    borderWidth: 2,
+    borderColor: '#DC2626',
+  },
+  cancelledBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    alignSelf: 'flex-start',
+    marginBottom: 4,
+  },
+  cancelledBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  cancelledName: {
+    textDecorationLine: 'line-through',
+    opacity: 0.7,
+  },
+  deleteAction: {
+    backgroundColor: '#DC2626',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    marginBottom: 10,
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  deleteText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
   },
 });

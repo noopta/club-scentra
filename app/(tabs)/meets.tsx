@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import { useTheme } from '@/lib/ThemeContext';
-import { meets as meetsApi, Event } from '@/lib/api';
+import { meets as meetsApi, events as eventsApi, Event } from '@/lib/api';
 import EventCard from '@/components/EventCard';
 import SearchBar from '@/components/SearchBar';
 import LocationDropdown from '@/components/LocationDropdown';
@@ -39,6 +39,20 @@ export default function MeetsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [savedModalVisible, setSavedModalVisible] = useState(false);
   const [showHostedOnly, setShowHostedOnly] = useState(false);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+
+  const handleDeleteEvent = async (eventId: string) => {
+    setDeletingEventId(eventId);
+    try {
+      await eventsApi.delete(eventId);
+      setHostedEvents(prev => prev.filter(e => e.id !== eventId));
+      fetchAll(true);
+    } catch (err) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'Could not delete event');
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
 
   const parseDateFilter = (dateStr: string): string | undefined => {
     if (!dateStr) return undefined;
@@ -133,6 +147,7 @@ export default function MeetsScreen() {
         ) : (
           <>
             <Text style={styles.sectionTitle}>Hosted by {user?.username ?? 'You'}</Text>
+            <Text style={styles.swipeHint}>Swipe left or long-press to delete</Text>
             {hostedEvents.length === 0 ? (
               <Text style={styles.emptyText}>No hosted events yet</Text>
             ) : hostedEvents.map((event) => (
@@ -143,6 +158,8 @@ export default function MeetsScreen() {
                 date={formatDate(event.startAt)}
                 image={event.imageUrl || undefined}
                 variant="popular"
+                canDelete={true}
+                onDelete={() => handleDeleteEvent(event.id)}
                 onPress={() => router.push({ pathname: '/event-detail', params: { id: event.id } })}
                 onImagePress={() => router.push({ pathname: '/stories', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
                 onAddToStory={() => router.push({ pathname: '/create-post', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
@@ -188,9 +205,10 @@ export default function MeetsScreen() {
               
               return filteredPast.map((event) => {
                 const isHosted = event.host.id === user?.id;
+                const isCancelled = !!event.cancelledAt;
                 return (
                   <View key={event.id}>
-                    {isHosted && (
+                    {isHosted && !isCancelled && (
                       <View style={styles.hostedBadge}>
                         <Ionicons name="star" size={12} color={Theme.colors.primary} />
                         <Text style={styles.hostedBadgeText}>Hosted by you</Text>
@@ -202,9 +220,10 @@ export default function MeetsScreen() {
                       date={formatDate(event.startAt)}
                       image={event.imageUrl || undefined}
                       variant="past"
+                      isCancelled={isCancelled}
                       onPress={() => router.push({ pathname: '/event-detail', params: { id: event.id } })}
                       onImagePress={() => router.push({ pathname: '/stories', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
-                      onAddToStory={() => router.push({ pathname: '/create-post', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
+                      onAddToStory={isCancelled ? undefined : () => router.push({ pathname: '/create-post', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
                     />
                   </View>
                 );
@@ -268,14 +287,15 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.background },
   scrollContent: { paddingHorizontal: Theme.spacing.md, paddingTop: 60, paddingBottom: Theme.spacing.xl },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Theme.spacing.md },
-  headerLogo: { width: 140, height: 35 },
+  headerLogo: { width: 160, height: 36 },
   savedBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: c.white, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: c.border },
   savedBtnActive: { borderColor: c.primary, backgroundColor: '#FFF5F5' },
   savedBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: c.primary, borderRadius: 8, width: 16, height: 16, alignItems: 'center', justifyContent: 'center' },
   savedBadgeText: { color: c.white, fontSize: 10, fontWeight: Theme.fontWeight.bold },
-  pageTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.sm },
-  filterRow: { flexDirection: 'row', alignItems: 'center', gap: Theme.spacing.sm, marginBottom: Theme.spacing.md },
-  sectionTitle: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.sm, marginTop: Theme.spacing.sm },
+  pageTitle: { fontSize: Theme.fontSize.xl, fontWeight: Theme.fontWeight.bold, color: c.textPrimary, marginBottom: Theme.spacing.md },
+  filterRow: { flexDirection: 'row', gap: Theme.spacing.sm, marginBottom: Theme.spacing.sm },
+  sectionTitle: { fontSize: Theme.fontSize.lg, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary, marginTop: Theme.spacing.lg, marginBottom: Theme.spacing.sm },
+  swipeHint: { fontSize: Theme.fontSize.xs, color: c.textMuted, marginBottom: Theme.spacing.sm },
   emptyText: { color: c.textSecondary, fontSize: Theme.fontSize.sm, marginBottom: Theme.spacing.md },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   modalSheet: { backgroundColor: c.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40, maxHeight: '75%' },
