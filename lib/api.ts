@@ -222,6 +222,12 @@ export const users = {
   getById: (id: string) => request<PublicUser>(`/users/${id}`),
 
   search: (q: string) => request<PublicUser[]>(`/users/search?q=${encodeURIComponent(q)}`),
+
+  getFollowers: (id: string) => request<{ users: PublicUser[] }>(`/users/${id}/followers`),
+
+  getFollowing: (id: string) => request<{ users: PublicUser[] }>(`/users/${id}/following`),
+
+  getStats: (id: string) => request<{ eventsCount: number; followersCount: number; followingCount: number }>(`/users/${id}/stats`),
 };
 
 export const events = {
@@ -254,6 +260,12 @@ export const events = {
 
   removeRsvp: (id: string) =>
     request<{ ok: boolean }>(`/events/${id}/rsvp`, { method: 'DELETE' }),
+
+  update: (id: string, data: Partial<Event>) =>
+    request<Event>(`/events/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  getAttendees: (id: string) =>
+    request<{ going: PublicUser[]; interested: PublicUser[] }>(`/events/${id}/attendees`),
 
   getPosts: async (
     id: string,
@@ -342,6 +354,13 @@ export const messages = {
     }),
 };
 
+export type Comment = {
+  id: string;
+  body: string;
+  createdAt: string;
+  author: PublicUser;
+};
+
 export const social = {
   follow: (userId: string) =>
     request<{ ok: boolean }>(`/social/follow/${userId}`, { method: 'POST' }),
@@ -354,6 +373,15 @@ export const social = {
 
   createPost: (input: { imageUrl: string; caption?: string; eventId?: string }) =>
     request<Post>('/social/posts', { method: 'POST', body: JSON.stringify(input) }),
+
+  getComments: (postId: string) =>
+    request<{ comments: Comment[] }>(`/social/posts/${postId}/comments`),
+
+  addComment: (postId: string, body: string) =>
+    request<Comment>(`/social/posts/${postId}/comments`, { method: 'POST', body: JSON.stringify({ body }) }),
+
+  deleteComment: (postId: string, commentId: string) =>
+    request<{ ok: boolean }>(`/social/posts/${postId}/comments/${commentId}`, { method: 'DELETE' }),
 };
 
 export const uploads = {

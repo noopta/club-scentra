@@ -1,18 +1,22 @@
 import React, { useMemo } from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Theme } from '@/constants/Theme';
 import { useTheme } from '@/lib/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ProfileHeaderProps {
   username: string;
   name: string;
-  avatar: string;
+  avatar?: string;
   events: number;
   followers: number;
   following: number;
   bio?: string;
   car?: string;
   location?: string;
+  onFollowersPress?: () => void;
+  onFollowingPress?: () => void;
+  onAvatarPress?: () => void;
 }
 
 export default function ProfileHeader({
@@ -25,6 +29,9 @@ export default function ProfileHeader({
   bio,
   car,
   location,
+  onFollowersPress,
+  onFollowingPress,
+  onAvatarPress,
 }: ProfileHeaderProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -32,23 +39,29 @@ export default function ProfileHeader({
   return (
     <View style={styles.container}>
       <Text style={styles.username}>@{username}</Text>
-      <View style={styles.avatarContainer}>
-        <Image source={{ uri: avatar }} style={styles.avatar} />
-      </View>
+      <TouchableOpacity style={styles.avatarContainer} onPress={onAvatarPress} activeOpacity={onAvatarPress ? 0.8 : 1}>
+        {avatar ? (
+          <Image source={{ uri: avatar }} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <Ionicons name="person" size={48} color={colors.textMuted} />
+          </View>
+        )}
+      </TouchableOpacity>
       <Text style={styles.name}>{name}</Text>
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{events}</Text>
           <Text style={styles.statLabel}>events</Text>
         </View>
-        <View style={styles.statItem}>
+        <TouchableOpacity style={styles.statItem} onPress={onFollowersPress} activeOpacity={onFollowersPress ? 0.7 : 1}>
           <Text style={styles.statNumber}>{followers}</Text>
           <Text style={styles.statLabel}>followers</Text>
-        </View>
-        <View style={styles.statItem}>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.statItem} onPress={onFollowingPress} activeOpacity={onFollowingPress ? 0.7 : 1}>
           <Text style={styles.statNumber}>{following}</Text>
           <Text style={styles.statLabel}>following</Text>
-        </View>
+        </TouchableOpacity>
       </View>
       {car && (
         <Text style={styles.infoText}>🏎️ {car}</Text>
@@ -86,6 +99,11 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   avatar: {
     width: '100%',
     height: '100%',
+  },
+  avatarPlaceholder: {
+    backgroundColor: c.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   name: {
     fontSize: Theme.fontSize.lg,

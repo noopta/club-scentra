@@ -38,6 +38,7 @@ export default function MeetsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [savedModalVisible, setSavedModalVisible] = useState(false);
+  const [showHostedOnly, setShowHostedOnly] = useState(false);
 
   const parseDateFilter = (dateStr: string): string | undefined => {
     if (!dateStr) return undefined;
@@ -70,7 +71,9 @@ export default function MeetsScreen() {
         meetsApi.getSection('saved', filterParams),
         meetsApi.getSection('past', filterParams),
       ]);
-      setHostedEvents(h.events);
+      const now = new Date();
+      const futureHosted = h.events.filter(e => new Date(e.startAt) >= now);
+      setHostedEvents(futureHosted);
       setGoingEvents(g.events);
       setSavedEvents(s.events);
       setPastEvents(p.events);
@@ -163,22 +166,50 @@ export default function MeetsScreen() {
               />
             ))}
 
-            <Text style={styles.sectionTitle}>Past Ride Log</Text>
-            {pastEvents.length === 0 ? (
-              <Text style={styles.emptyText}>No past events</Text>
-            ) : pastEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                name={event.title}
-                location={formatLocation(event)}
-                date={formatDate(event.startAt)}
-                image={event.imageUrl || undefined}
-                variant="past"
-                onPress={() => router.push({ pathname: '/event-detail', params: { id: event.id } })}
-                onImagePress={() => router.push({ pathname: '/stories', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
-                onAddToStory={() => router.push({ pathname: '/create-post', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
-              />
-            ))}
+            <View style={styles.pastTitleRow}>
+              <Text style={styles.sectionTitle}>Past Ride Log</Text>
+              <TouchableOpacity 
+                style={[styles.hostedFilterBtn, showHostedOnly && styles.hostedFilterBtnActive]}
+                onPress={() => setShowHostedOnly(!showHostedOnly)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="star" size={14} color={showHostedOnly ? Theme.colors.white : Theme.colors.primary} />
+                <Text style={[styles.hostedFilterText, showHostedOnly && styles.hostedFilterTextActive]}>Hosted</Text>
+              </TouchableOpacity>
+            </View>
+            {(() => {
+              const filteredPast = showHostedOnly 
+                ? pastEvents.filter(e => e.host.id === user?.id)
+                : pastEvents;
+              
+              if (filteredPast.length === 0) {
+                return <Text style={styles.emptyText}>{showHostedOnly ? 'No hosted past events' : 'No past events'}</Text>;
+              }
+              
+              return filteredPast.map((event) => {
+                const isHosted = event.host.id === user?.id;
+                return (
+                  <View key={event.id}>
+                    {isHosted && (
+                      <View style={styles.hostedBadge}>
+                        <Ionicons name="star" size={12} color={Theme.colors.primary} />
+                        <Text style={styles.hostedBadgeText}>Hosted by you</Text>
+                      </View>
+                    )}
+                    <EventCard
+                      name={event.title}
+                      location={formatLocation(event)}
+                      date={formatDate(event.startAt)}
+                      image={event.imageUrl || undefined}
+                      variant="past"
+                      onPress={() => router.push({ pathname: '/event-detail', params: { id: event.id } })}
+                      onImagePress={() => router.push({ pathname: '/stories', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
+                      onAddToStory={() => router.push({ pathname: '/create-post', params: { eventId: event.id, eventTitle: event.title, eventImage: event.imageUrl || '' } })}
+                    />
+                  </View>
+                );
+              });
+            })()}
           </>
         )}
       </ScrollView>
@@ -259,4 +290,11 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   savedItemInfo: { flex: 1 },
   savedItemName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
   savedItemMeta: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginTop: 2 },
+  pastTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Theme.spacing.sm, marginBottom: Theme.spacing.sm },
+  hostedFilterBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: c.primary, backgroundColor: c.white },
+  hostedFilterBtnActive: { backgroundColor: c.primary },
+  hostedFilterText: { fontSize: Theme.fontSize.xs, fontWeight: Theme.fontWeight.semibold, color: c.primary },
+  hostedFilterTextActive: { color: c.white },
+  hostedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4, marginLeft: 4 },
+  hostedBadgeText: { fontSize: Theme.fontSize.xs, fontWeight: Theme.fontWeight.semibold, color: c.primary },
 });

@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Platform, ActivityIndicator, RefreshControl, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Platform, ActivityIndicator, RefreshControl, Animated, Image } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '@/constants/Theme';
 import { useTheme } from '@/lib/ThemeContext';
-import { social, Post } from '@/lib/api';
+import { social, users as usersApi, Post, PublicUser } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import ProfileHeader from '@/components/ProfileHeader';
 import PhotoGrid from '@/components/PhotoGrid';
@@ -20,6 +20,13 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  
+  const [stats, setStats] = useState({ eventsCount: 0, followersCount: 0, followingCount: 0 });
+  const [followersModalVisible, setFollowersModalVisible] = useState(false);
+  const [followingModalVisible, setFollowingModalVisible] = useState(false);
+  const [followers, setFollowers] = useState<PublicUser[]>([]);
+  const [following, setFollowing] = useState<PublicUser[]>([]);
+  const [loadingList, setLoadingList] = useState(false);
 
   useEffect(() => {
     if (postModalVisible) {
@@ -38,8 +45,12 @@ export default function ProfileScreen() {
     try {
       await refreshUser();
       if (user?.id) {
-        const res = await social.getPosts(user.id);
-        setPosts(res.posts);
+        const [postsRes, statsRes] = await Promise.all([
+          social.getPosts(user.id),
+          usersApi.getStats(user.id).catch(() => ({ eventsCount: 0, followersCount: 0, followingCount: 0 })),
+        ]);
+        setPosts(postsRes.posts);
+        setStats(statsRes);
       }
     } catch {
       setPosts([]);
@@ -49,9 +60,46 @@ export default function ProfileScreen() {
     }
   }, [user?.id]);
 
+  const loadFollowers = useCallback(async () => {
+    if (!user?.id) return;
+    setLoadingList(true);
+    try {
+      const res = await usersApi.getFollowers(user.id);
+      setFollowers(res.users);
+    } catch {
+      setFollowers([]);
+    } finally {
+      setLoadingList(false);
+    }
+  }, [user?.id]);
+
+  const loadFollowing = useCallback(async () => {
+    if (!user?.id) return;
+    setLoadingList(true);
+    try {
+      const res = await usersApi.getFollowing(user.id);
+      setFollowing(res.users);
+    } catch {
+      setFollowing([]);
+    } finally {
+      setLoadingList(false);
+    }
+  }, [user?.id]);
+
+  const openFollowersModal = () => {
+    setFollowersModalVisible(true);
+    loadFollowers();
+  };
+
+  const openFollowingModal = () => {
+    setFollowingModalVisible(true);
+    loadFollowing();
+  };
+
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
-  const photoUrls = posts.filter(p => !p.eventId).map(p => p.imageUrl);
+  const profilePosts = posts.filter(p => !p.eventId);
+  const photoUrls = profilePosts.map(p => p.imageUrl);
 
   return (
     <View style={styles.container}>
@@ -77,10 +125,12 @@ export default function ProfileScreen() {
               username={user?.username ?? ''}
               name={user?.displayName ?? user?.username ?? ''}
               avatar={user?.avatarUrl ?? undefined}
-              events={0}
-              followers={0}
-              following={0}
+              events={stats.eventsCount}
+              followers={stats.followersCount}
+              following={stats.followingCount}
               bio={user?.bio ?? ''}
+              onFollowersPress={openFollowersModal}
+              onFollowingPress={openFollowingModal}
             />
 
             <View style={styles.buttonRow}>
@@ -92,7 +142,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
 
-            <PhotoGrid photos={photoUrls} />
+            <PhotoGrid photos={photoUrls} posts={profilePosts} />
           </>
         )}
       </ScrollView>
@@ -145,6 +195,96 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Followers Modal */}
+      <Modal visible={followersModalVisible} transparent animationType="slide" onRequestClose={() => setFollowersModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <Animated.View style={[styles.modalOverlay, { opacity: overlayOpacity }]}>
+            <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setFollowersModalVisible(false)} />
+          </Animated.View>
+          <View style={styles.listModalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Followers</Text>
+            {loadingList ? (
+              <ActivityIndicator color={Theme.colors.primary} style={{ marginTop: 20 }} />
+            ) : followers.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="people-outline" size={48} color={Theme.colors.textMuted} />
+                <Text style={styles.emptyText}>No followers yet</Text>
+              </View>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {followers.map((u) => (
+                  <TouchableOpacity
+                    key={u.id}
+                    style={styles.userRow}
+                    onPress={() => { setFollowersModalVisible(false); router.push({ pathname: '/friend-profile', params: { id: u.id } }); }}
+                    activeOpacity={0.8}
+                  >
+                    {u.avatarUrl ? (
+                      <Image source={{ uri: u.avatarUrl }} style={styles.userAvatar} />
+                    ) : (
+                      <View style={[styles.userAvatar, styles.userAvatarPlaceholder]}>
+                        <Ionicons name="person" size={20} color={Theme.colors.textMuted} />
+                      </View>
+                    )}
+                    <View style={styles.userInfo}>
+                      <Text style={styles.userDisplayName}>{u.displayName || u.username}</Text>
+                      <Text style={styles.userUsername}>@{u.username}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={Theme.colors.textSecondary} />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Following Modal */}
+      <Modal visible={followingModalVisible} transparent animationType="slide" onRequestClose={() => setFollowingModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <Animated.View style={[styles.modalOverlay, { opacity: overlayOpacity }]}>
+            <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setFollowingModalVisible(false)} />
+          </Animated.View>
+          <View style={styles.listModalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Following</Text>
+            {loadingList ? (
+              <ActivityIndicator color={Theme.colors.primary} style={{ marginTop: 20 }} />
+            ) : following.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="people-outline" size={48} color={Theme.colors.textMuted} />
+                <Text style={styles.emptyText}>Not following anyone yet</Text>
+              </View>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {following.map((u) => (
+                  <TouchableOpacity
+                    key={u.id}
+                    style={styles.userRow}
+                    onPress={() => { setFollowingModalVisible(false); router.push({ pathname: '/friend-profile', params: { id: u.id } }); }}
+                    activeOpacity={0.8}
+                  >
+                    {u.avatarUrl ? (
+                      <Image source={{ uri: u.avatarUrl }} style={styles.userAvatar} />
+                    ) : (
+                      <View style={[styles.userAvatar, styles.userAvatarPlaceholder]}>
+                        <Ionicons name="person" size={20} color={Theme.colors.textMuted} />
+                      </View>
+                    )}
+                    <View style={styles.userInfo}>
+                      <Text style={styles.userDisplayName}>{u.displayName || u.username}</Text>
+                      <Text style={styles.userUsername}>@{u.username}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={Theme.colors.textSecondary} />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -172,4 +312,13 @@ const makeStyles = (c: typeof Theme.colors) => StyleSheet.create({
   modalOptionSub: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginTop: 2 },
   cancelButton: { marginTop: Theme.spacing.lg, backgroundColor: c.background, borderRadius: Theme.borderRadius.xl, paddingVertical: 14, alignItems: 'center' },
   cancelText: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
+  listModalSheet: { backgroundColor: c.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: Theme.spacing.lg, paddingTop: Theme.spacing.md, paddingBottom: 40, maxHeight: '70%' },
+  emptyState: { alignItems: 'center', paddingVertical: Theme.spacing.xxl },
+  emptyText: { fontSize: Theme.fontSize.md, color: c.textSecondary, marginTop: Theme.spacing.md },
+  userRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: Theme.spacing.md, borderBottomWidth: 1, borderBottomColor: c.border },
+  userAvatar: { width: 48, height: 48, borderRadius: 24, marginRight: Theme.spacing.md },
+  userAvatarPlaceholder: { backgroundColor: c.border, alignItems: 'center', justifyContent: 'center' },
+  userInfo: { flex: 1 },
+  userDisplayName: { fontSize: Theme.fontSize.md, fontWeight: Theme.fontWeight.semibold, color: c.textPrimary },
+  userUsername: { fontSize: Theme.fontSize.sm, color: c.textSecondary, marginTop: 2 },
 });
